@@ -1,0 +1,3 @@
+rootProject.name='MyOpenCvCamera'
+include ':app'
+include ':opencv'
