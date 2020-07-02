@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MyOpenCvCamera</string>
+    <string name="title_gray">灰度</string>
+    <string name="title_rgb">rgb</string>
+    <string name="title_canny">canny</string>
+    <string name="title_exit">exit</string>
 </resources>
