@@ -4,15 +4,18 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -25,9 +28,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Date;
+
 
 public class MainActivity extends AppCompatActivity implements CvCameraViewListener2 {
-    private static final String TAG = "CameraActivity";
+    private static final String TAG = "TAG_CameraActivity";
 
     private CameraBridgeViewBase mOpenCvCameraView;
     private boolean mIsJavaCamera = true;
@@ -35,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private static final int VIEW_MODE_RGBA = 0;
     private static final int VIEW_MODE_GRAY = 1;
     private static final int VIEW_MODE_CANNY = 2;
+    private static final int VIEW_MODE_CLICK = 3;
     private static final int VIEW_MODE_FEATURES = 5;
 
     private int mViewMode;
@@ -57,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             }
         }
     };
+    private boolean hasSaved;
 
     /**
      * 第一次创建时调用
@@ -135,6 +145,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 break;
             case R.id.exitItem:
                 finish();
+            case R.id.clickItem:
+                savePicture(mRgba);
+                mViewMode = VIEW_MODE_CLICK;
+              break;
         }
         return true;
     }
@@ -156,19 +170,54 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         final int viewMode = mViewMode;
         switch (viewMode) {
             case VIEW_MODE_GRAY:
+                hasSaved = false;
                 Imgproc.cvtColor(inputFrame.gray(), mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
                 break;
             case VIEW_MODE_RGBA:
+                hasSaved = false;
                 mRgba = inputFrame.rgba();
                 break;
             case VIEW_MODE_CANNY:
+                hasSaved = false;
                 mRgba = inputFrame.rgba();
                 Imgproc.Canny(inputFrame.gray(), mIntermediateMat, 80, 100);
                 Imgproc.cvtColor(mIntermediateMat, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
                 break;
+            case VIEW_MODE_CLICK:
+                break;
         }
 
         return mRgba;
+    }
+
+    private void savePicture(Mat frameData){
+       /* if(hasSaved){
+            return;
+        }
+        hasSaved = true;*/
+        Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(frameData, bitmap);
+        String name = System.currentTimeMillis() + "output_image.jpg";
+        String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
+        String fileName = pathResult + ".jpg";
+        Imgcodecs.imwrite(fileName, frameData);
+        FileOutputStream outputStream = null;
+      /*  try {
+            outputStream = new FileOutputStream(fileName);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            outputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            if(outputStream != null){
+                try {
+                    outputStream.close();
+                    Log.d(TAG,"savePicture end");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }*/
     }
 }
 

@@ -4,4 +4,5 @@
     <string name="title_rgb">rgb</string>
     <string name="title_canny">canny</string>
     <string name="title_exit">exit</string>
+    <string name="title_click">photo</string>
 </resources>
