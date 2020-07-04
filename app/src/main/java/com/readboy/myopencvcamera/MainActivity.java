@@ -16,12 +16,15 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,6 +35,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
+
+import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
+import static org.opencv.imgproc.Imgproc.THRESH_BINARY_INV;
 
 
 public class MainActivity extends AppCompatActivity implements CvCameraViewListener2 {
@@ -67,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         }
     };
     private boolean hasSaved;
+    private ImageView ivShow;
 
     /**
      * 第一次创建时调用
@@ -87,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         setContentView(R.layout.activity_main);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.javaCameraView);
+        ivShow = (ImageView) findViewById(R.id.iv_show);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
@@ -135,18 +143,27 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.grayItem:
+                ivShow.setVisibility(View.GONE);
+                mOpenCvCameraView.setVisibility(View.VISIBLE);
                 mViewMode = VIEW_MODE_GRAY;
                 break;
             case R.id.rgbItem:
+                ivShow.setVisibility(View.GONE);
+                mOpenCvCameraView.setVisibility(View.VISIBLE);
                 mViewMode = VIEW_MODE_RGBA;
                 break;
             case R.id.cannyItem:
+                ivShow.setVisibility(View.GONE);
+                mOpenCvCameraView.setVisibility(View.VISIBLE);
                 mViewMode = VIEW_MODE_CANNY;
                 break;
             case R.id.exitItem:
                 finish();
+                break;
             case R.id.clickItem:
                 savePicture(mRgba);
+                ivShow.setVisibility(View.VISIBLE);
+                mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
               break;
         }
@@ -174,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 Imgproc.cvtColor(inputFrame.gray(), mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
                 break;
             case VIEW_MODE_RGBA:
+
                 hasSaved = false;
                 mRgba = inputFrame.rgba();
                 break;
@@ -184,24 +202,43 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 Imgproc.cvtColor(mIntermediateMat, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
                 break;
             case VIEW_MODE_CLICK:
+
                 break;
         }
 
         return mRgba;
     }
 
-    private void savePicture(Mat frameData){
+    private Mat processImage( Mat gray ) {
+        Mat b = new Mat();
+        Imgproc.medianBlur( gray, b, 3);
+        Mat t = new Mat();
+        Imgproc.threshold(b, t, 115, 220, THRESH_BINARY);
+        /*Imgproc.adaptiveThreshold(
+                b,
+                t,
+                255,
+                Imgproc.ADAPTIVE_THRESH_MEAN_C,
+                Imgproc.THRESH_BINARY,
+                55,
+                0.0
+        );*/
+        return t;
+    }
+
+    private void savePicture(Mat frame){
        /* if(hasSaved){
             return;
         }
         hasSaved = true;*/
+        Mat frameData = processImage(frame);
         Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(frameData, bitmap);
         String name = System.currentTimeMillis() + "output_image.jpg";
         String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
         String fileName = pathResult + ".jpg";
         Imgcodecs.imwrite(fileName, frameData);
-        FileOutputStream outputStream = null;
+        ivShow.setImageBitmap(bitmap);
       /*  try {
             outputStream = new FileOutputStream(fileName);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
