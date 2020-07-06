@@ -13,6 +13,7 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -219,7 +220,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     private Mat processImage( Mat gray ) {
         Mat b = new Mat();
-        Imgproc.medianBlur( gray, b, 3);
+        Imgproc.GaussianBlur(gray,b, new Size(3,3),0);
+       // Imgproc.medianBlur( gray, b, 3);
         Mat t = new Mat();
         Imgproc.threshold(b, t, 125, 220, THRESH_BINARY);
 
@@ -329,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Imgcodecs.imwrite(fileName, frameData);
         //ivShow.setImageBitmap(bitmap);
         Mat edge=new Mat();
-        Imgproc.Canny(frameData,edge,100,250,3,true);
+        Imgproc.Canny(frameData,edge,90,270,5,true);
         List<Point> points = getCornersByContour(edge);
         for (Point point : points) {
             Log.d(TAG,"point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
