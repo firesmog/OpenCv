@@ -5,10 +5,14 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -16,9 +20,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
@@ -34,7 +40,9 @@ import androidx.core.content.ContextCompat;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY_INV;
@@ -213,17 +221,86 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Mat b = new Mat();
         Imgproc.medianBlur( gray, b, 3);
         Mat t = new Mat();
-        Imgproc.threshold(b, t, 115, 220, THRESH_BINARY);
-        /*Imgproc.adaptiveThreshold(
-                b,
-                t,
-                255,
-                Imgproc.ADAPTIVE_THRESH_MEAN_C,
-                Imgproc.THRESH_BINARY,
-                55,
-                0.0
-        );*/
+        Imgproc.threshold(b, t, 125, 220, THRESH_BINARY);
+
         return t;
+    }
+
+
+    public static List<Point> getCornersByContour(Mat imgsource){
+        List<MatOfPoint> contours=new ArrayList<>();
+        //轮廓检测
+        Imgproc.findContours(imgsource,contours,new Mat(),Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE);
+        Log.d(TAG,"findContours size = " + contours.size());
+        double maxArea=-1;
+        int maxAreaIdx=-1;
+        MatOfPoint temp_contour=contours.get(0);//假设最大的轮廓在index=0处
+        MatOfPoint2f approxCurve=new MatOfPoint2f();
+        for (int idx=0;idx<contours.size();idx++){
+            temp_contour=contours.get(idx);
+            double contourarea=Imgproc.contourArea(temp_contour);
+            Log.d(TAG,"findContours area = " + contourarea);
+
+            //当前轮廓面积比最大的区域面积大就检测是否为四边形
+            if (contourarea > maxArea){
+                //检测contour是否是四边形
+                MatOfPoint2f new_mat=new MatOfPoint2f(temp_contour.toArray());
+                int contourSize= (int) temp_contour.total();
+                MatOfPoint2f approxCurve_temp=new MatOfPoint2f();
+                //对图像轮廓点进行多边形拟合
+                Imgproc.approxPolyDP(new_mat,approxCurve_temp,contourSize*0.04,true);
+                if (approxCurve_temp.total()==4){
+                    maxArea=contourarea;
+                    maxAreaIdx=idx;
+                    approxCurve=approxCurve_temp;
+                    Log.d(TAG,"findContours22222 area = " + contourarea);
+
+                }
+            }
+        }
+        double[] temp_double=approxCurve.get(0,0);
+        Point point1=new Point(temp_double[0],temp_double[1]);
+        temp_double=approxCurve.get(1,0);
+        Point point2=new Point(temp_double[0],temp_double[1]);
+        temp_double=approxCurve.get(2,0);
+        Point point3=new Point(temp_double[0],temp_double[1]);
+        temp_double=approxCurve.get(3,0);
+        Point point4=new Point(temp_double[0],temp_double[1]);
+
+        List<Point> source=new ArrayList<>();
+        source.add(point1);
+        source.add(point2);
+        source.add(point3);
+        source.add(point4);
+        //对4个点进行排序
+        Point centerPoint=new Point(0,0);//质心
+        for (Point corner:source){
+            centerPoint.x+=corner.x;
+            centerPoint.y+=corner.y;
+        }
+        centerPoint.x=centerPoint.x/source.size();
+        centerPoint.y=centerPoint.y/source.size();
+        Point lefttop=new Point();
+        Point righttop=new Point();
+        Point leftbottom=new Point();
+        Point rightbottom=new Point();
+        for (int i=0;i<source.size();i++){
+            if (source.get(i).x<centerPoint.x&&source.get(i).y<centerPoint.y){
+                lefttop=source.get(i);
+            }else if (source.get(i).x>centerPoint.x&&source.get(i).y<centerPoint.y){
+                righttop=source.get(i);
+            }else if (source.get(i).x<centerPoint.x&& source.get(i).y>centerPoint.y){
+                leftbottom=source.get(i);
+            }else if (source.get(i).x>centerPoint.x&&source.get(i).y>centerPoint.y){
+                rightbottom=source.get(i);
+            }
+        }
+        source.clear();
+        source.add(lefttop);
+        source.add(righttop);
+        source.add(leftbottom);
+        source.add(rightbottom);
+        return source;
     }
 
     private void savePicture(Mat frame){
@@ -232,13 +309,35 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         }
         hasSaved = true;*/
         Mat frameData = processImage(frame);
+        List<Mat> mats = new ArrayList<>();
+        //多通道分离出单通道
+       /* Core.split(frameData,mats);
+        if( mats.size() > 0){
+            for (Mat mat : mats) {
+                List<Point> points = getCornersByContour(mat);
+                for (Point point : points) {
+                    Log.d(TAG,"point ======" + point.toString());
+                }
+            }
+        }*/
+
         Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(frameData, bitmap);
         String name = System.currentTimeMillis() + "output_image.jpg";
         String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
         String fileName = pathResult + ".jpg";
         Imgcodecs.imwrite(fileName, frameData);
-        ivShow.setImageBitmap(bitmap);
+        //ivShow.setImageBitmap(bitmap);
+        Mat edge=new Mat();
+        Imgproc.Canny(frameData,edge,100,250,3,true);
+        List<Point> points = getCornersByContour(edge);
+        for (Point point : points) {
+            Log.d(TAG,"point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
+        }
+        Bitmap rectBitmap = Bitmap.createBitmap(bitmap,(int) Math.min(points.get(0).x,points.get(2).x), (int) Math.min(points.get(1).y,points.get(3).y), edge.width() - (int) Math.min(points.get(0).x,points.get(2).x),
+                edge.height() -  (int) Math.min(points.get(1).y,points.get(3).y));
+        ivShow.setImageBitmap(rectBitmap);
+        //width = 1440,height = 2768
       /*  try {
             outputStream = new FileOutputStream(fileName);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
@@ -255,6 +354,32 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 }
             }
         }*/
+    }
+
+    /**
+     * 将屏幕中的位置（大小）对应到图片中
+     *
+     * @param w 屏幕中的位置（宽度）
+     * @param h 屏幕中的位置（高度）
+     * @return
+     */
+    private Point createCenterPictureRect(Mat edge, int h,int w) {
+        Display display = getWindowManager().getDefaultDisplay();
+        int wScreen = display.getWidth();
+        int hScreen = display.getHeight();
+
+
+        int wSavePicture = edge.width(); //因为图片旋转了，所以此处宽高换位
+        int hSavePicture = edge.height(); //因为图片旋转了，所以此处宽高换位
+
+        float wRate = (float) (wSavePicture) / (float) (wScreen);
+        float hRate = (float) (hSavePicture) / (float) (hScreen);
+        float rate = (wRate <= hRate) ? wRate : hRate;//也可以按照最小比率计算
+
+        int wRectPicture = (int) (w * wRate);
+        int hRectPicture = (int) (h * hRate);
+
+        return new Point(wRectPicture, hRectPicture);
     }
 }
 
