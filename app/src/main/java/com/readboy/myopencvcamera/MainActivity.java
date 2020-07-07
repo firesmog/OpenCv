@@ -396,10 +396,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Point bitmapBottomRight=points.get(3);
 
         Utils.matToBitmap(frame, bitmap);
-        Canvas canvas = new Canvas(bitmap);
+        /*Canvas canvas = new Canvas(bitmap);
 
         Paint paint = new Paint();
-        paint.setColor(Color.parseColor("#06000000"));
+        //paint.setColor(Color.parseColor("#06000000"));
+        paint.setColor(Color.parseColor("#3d4e5a"));
         // 1. draw path
         Path path = new Path();
         path.moveTo((float) bitmapTopLeft.x, (float) bitmapTopLeft.y);
@@ -412,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         canvas.drawPath(path, paint);
 
         // 2. draw original bitmap
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));*/
         //canvas.drawBitmap(bitmap, 0, 0, paint);
         Rect cropRect = new Rect(
                 Math.min((int)bitmapTopLeft.x, (int)bitmapBottomLeft.x),
@@ -428,7 +429,13 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 cropRect.height()
         );
 
-        /*android.graphics.Point cutTopLeft = new android.graphics.Point();
+        Log.e("stk", "bitmapPoints="
+                + bitmapTopLeft.toString() + " "
+                + bitmapTopRight.toString() + " "
+                + bitmapBottomRight.toString() + " "
+                + bitmapBottomLeft.toString() + " ");
+
+        android.graphics.Point cutTopLeft = new android.graphics.Point();
         android.graphics.Point cutTopRight = new android.graphics.Point();
         android.graphics.Point cutBottomLeft = new android.graphics.Point();
         android.graphics.Point cutBottomRight = new android.graphics.Point();
@@ -446,12 +453,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         cutBottomRight.y = (int)(bitmapBottomLeft.y > bitmapBottomRight.y ? cropRect.height() - Math.abs(bitmapBottomRight.y - bitmapBottomLeft.y) : cropRect.height());
 
         Log.e("stk", cut.getWidth() + "x" + cut.getHeight());
-
         Log.e("stk", "cutPoints="
                 + cutTopLeft.toString() + " "
                 + cutTopRight.toString() + " "
                 + cutBottomRight.toString() + " "
                 + cutBottomLeft.toString() + " ");
+
 
         float width = cut.getWidth();
         float height = cut.getHeight();
@@ -466,10 +473,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Canvas stretchCanvas = new Canvas(stretch);
 //            stretchCanvas.drawBitmap(cut, matrix, null);
         stretchCanvas.concat(matrix);
-        stretchCanvas.drawBitmapMesh(cut, WIDTH_BLOCK, HEIGHT_BLOCK, generateVertices(cut.getWidth(), cut.getHeight()), 0, null, 0, null);*/
+        stretchCanvas.drawBitmapMesh(cut, WIDTH_BLOCK, HEIGHT_BLOCK, generateVertices(cut.getWidth(), cut.getHeight()), 0, null, 0, null);
 
         ivShow.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-        ivShow.setImageBitmap(cut);
+        ivShow.setImageBitmap(stretch);
     }
 
 
