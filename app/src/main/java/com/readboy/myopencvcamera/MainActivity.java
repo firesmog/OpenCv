@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -398,14 +399,14 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Canvas canvas = new Canvas(bitmap);
 
         Paint paint = new Paint();
-        paint.setColor(getResources().getColor(R.color.colorPrimary));
+        paint.setColor(Color.parseColor("#06000000"));
         // 1. draw path
         Path path = new Path();
         path.moveTo((float) bitmapTopLeft.x, (float) bitmapTopLeft.y);
         path.lineTo((float) bitmapTopRight.x, (float) bitmapTopRight.y);
         path.lineTo((float) bitmapBottomRight.x, (float) bitmapBottomRight.y);
         path.lineTo((float)bitmapBottomLeft.x,(float) bitmapBottomLeft.y);
-        path.moveTo((float)bitmapTopLeft.x, (float)bitmapTopLeft.y);
+        //path.moveTo((float)bitmapTopLeft.x, (float)bitmapTopLeft.y);
 
         path.close();
         canvas.drawPath(path, paint);
