@@ -20,9 +20,7 @@ import org.opencv.imgproc.Imgproc;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -30,16 +28,19 @@ import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.readboy.bean.Data;
+import com.readboy.util.BitmapUtils;
+import com.readboy.util.GsonUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Vector;
 
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
 
@@ -61,6 +62,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private Mat mRgba;
     private Mat mIntermediateMat;
     private Mat mGray;
+
+
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -78,7 +81,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         }
     };
     private boolean hasSaved;
-    private ImageView ivShow;
+    private LinearLayout llShow;
+    private MatOfPoint2f approxCurve;
+    private double lastArea;
 
     /**
      * 第一次创建时调用
@@ -99,9 +104,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         setContentView(R.layout.activity_main);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.javaCameraView);
-        ivShow = (ImageView) findViewById(R.id.iv_show);
+        llShow = (LinearLayout) findViewById(R.id.iv_show);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
+        Data data = GsonUtil.gsonToBean(getString(R.string.json_string),Data.class);
+        Log.d("TAGFJUHU",data.toString());
 
     }
 
@@ -148,17 +155,17 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.grayItem:
-                ivShow.setVisibility(View.GONE);
+                llShow.setVisibility(View.GONE);
                 mOpenCvCameraView.setVisibility(View.VISIBLE);
                 mViewMode = VIEW_MODE_GRAY;
                 break;
             case R.id.rgbItem:
-                ivShow.setVisibility(View.GONE);
+                llShow.setVisibility(View.GONE);
                 mOpenCvCameraView.setVisibility(View.VISIBLE);
                 mViewMode = VIEW_MODE_RGBA;
                 break;
             case R.id.cannyItem:
-                ivShow.setVisibility(View.GONE);
+                llShow.setVisibility(View.GONE);
                 mOpenCvCameraView.setVisibility(View.VISIBLE);
                 mViewMode = VIEW_MODE_CANNY;
                 break;
@@ -167,9 +174,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 break;
             case R.id.clickItem:
                  //savePicture(mRgba);
-                showDifferentColorImage(mRgba);
-                //showAutoCropPicture(mRgba);
-                ivShow.setVisibility(View.VISIBLE);
+                //showDifferentColorImage(mRgba);
+                showAutoCropPicture(mRgba);
+                llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
               break;
@@ -219,16 +226,18 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
     private Mat processImage( Mat gray ) {
         Mat b = new Mat();
+        //Mat a = new Mat();
+
         //高斯模糊效果较好，size里的参数只能为奇数
         Imgproc.GaussianBlur(gray,b, new Size(5,5),0);
-       // Imgproc.medianBlur( gray, b, 3);
+        //Imgproc.medianBlur(a , b, 3);
         Mat t = new Mat();
         Imgproc.threshold(b, t, 125, 300, THRESH_BINARY);
         return t;
     }
 
 
-    public static List<Point> getCornersByContour(Mat imgsource){
+    public List<Point> getCornersByContour(Mat imgsource){
         List<MatOfPoint> contours=new ArrayList<>();
         //轮廓检测
         Imgproc.findContours(imgsource,contours,new Mat(),Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE);
@@ -255,55 +264,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     maxAreaIdx=idx;
                     approxCurve=approxCurve_temp;
                     Log.d(TAG,"findContours22222 area = " + contourarea);
-
                 }
             }
         }
         Log.d(TAG,"findContours area max  = " + maxArea);
-
-        double[] temp_double=approxCurve.get(0,0);
-        Point point1=new Point(temp_double[0],temp_double[1]);
-        temp_double=approxCurve.get(1,0);
-        Point point2=new Point(temp_double[0],temp_double[1]);
-        temp_double=approxCurve.get(2,0);
-        Point point3=new Point(temp_double[0],temp_double[1]);
-        temp_double=approxCurve.get(3,0);
-        Point point4=new Point(temp_double[0],temp_double[1]);
-
-        List<Point> source=new ArrayList<>();
-        source.add(point1);
-        source.add(point2);
-        source.add(point3);
-        source.add(point4);
-        //对4个点进行排序
-        Point centerPoint=new Point(0,0);//质心
-        for (Point corner:source){
-            centerPoint.x+=corner.x;
-            centerPoint.y+=corner.y;
-        }
-        centerPoint.x=centerPoint.x/source.size();
-        centerPoint.y=centerPoint.y/source.size();
-        Point lefttop=new Point();
-        Point righttop=new Point();
-        Point leftbottom=new Point();
-        Point rightbottom=new Point();
-        for (int i=0;i<source.size();i++){
-            if (source.get(i).x<centerPoint.x&&source.get(i).y<centerPoint.y){
-                lefttop=source.get(i);
-            }else if (source.get(i).x>centerPoint.x&&source.get(i).y<centerPoint.y){
-                righttop=source.get(i);
-            }else if (source.get(i).x<centerPoint.x&& source.get(i).y>centerPoint.y){
-                leftbottom=source.get(i);
-            }else if (source.get(i).x>centerPoint.x&&source.get(i).y>centerPoint.y){
-                rightbottom=source.get(i);
-            }
-        }
-        source.clear();
-        source.add(lefttop);
-        source.add(righttop);
-        source.add(leftbottom);
-        source.add(rightbottom);
-        return source;
+        return BitmapUtils.getImagePoint(approxCurve);
     }
 
 
@@ -324,13 +289,19 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         contours.create(edge.rows(), edge.cols(), CvType.CV_8UC3);
         Imgproc.findContours(edge,contourList,new Mat(),Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE);
         for (int i = 0; i < contourList.size() ; i++) {
-            if(Imgproc.contourArea(contourList.get(i))  < 50){
+            double curArea = Imgproc.contourArea(contourList.get(i));
+            if(  curArea < 3000){
                 continue;
             }
 
+            if(Math.abs(curArea - lastArea)  < 10){
+                continue;
+            }
+            lastArea = curArea;
+
             //
             MatOfPoint2f curve = new MatOfPoint2f(contourList.get(i).toArray());
-            MatOfPoint2f approxCurve = new MatOfPoint2f();
+            approxCurve = new MatOfPoint2f();
             double epsilon = 15;
             Imgproc.approxPolyDP(curve, approxCurve, epsilon,true );
 
@@ -338,7 +309,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 continue;
             }
 
+            Log.d(TAG,"findContours area max  = " + Imgproc.contourArea(contourList.get(i))  +  ",length = " + Imgproc.arcLength(approxCurve,true));
 
+
+            List<Point> points = BitmapUtils.getImagePoint(approxCurve);
+            Bitmap stretch = BitmapUtils.cropBitmap(points,bitmap);
+            BitmapUtils.saveImageToGallery(stretch,MainActivity.this,i);
             Random r = new Random();
             Imgproc.drawContours(
                     contours,
@@ -349,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             );
         }
         Utils.matToBitmap(contours, bitmap);
-        ivShow.setImageBitmap(bitmap);
+        llShow.setBackground(new BitmapDrawable(getResources(), bitmap));
     }
 
     //自动按边框裁剪后拉伸（test pass）
@@ -359,98 +335,18 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Utils.matToBitmap(frameData, bitmap);
         Mat edge=new Mat();
         Imgproc.Canny(frameData,edge,90,270,5,true);
+        Utils.matToBitmap(frame, bitmap);
         List<Point> points = getCornersByContour(edge);
         for (Point point : points) {
             Log.d(TAG,"point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
         }
-        Point bitmapTopLeft = points.get(0);
-        Point bitmapTopRight=points.get(1);
-        Point bitmapBottomLeft=points.get(2);
-        Point bitmapBottomRight=points.get(3);
 
-        Utils.matToBitmap(frame, bitmap);
-        /*Canvas canvas = new Canvas(bitmap);
-
-        Paint paint = new Paint();
-        //paint.setColor(Color.parseColor("#06000000"));
-        paint.setColor(Color.parseColor("#3d4e5a"));
-        // 1. draw path
-        Path path = new Path();
-        path.moveTo((float) bitmapTopLeft.x, (float) bitmapTopLeft.y);
-        path.lineTo((float) bitmapTopRight.x, (float) bitmapTopRight.y);
-        path.lineTo((float) bitmapBottomRight.x, (float) bitmapBottomRight.y);
-        path.lineTo((float)bitmapBottomLeft.x,(float) bitmapBottomLeft.y);
-        //path.moveTo((float)bitmapTopLeft.x, (float)bitmapTopLeft.y);
-
-        path.close();
-        canvas.drawPath(path, paint);
-
-        // 2. draw original bitmap
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));*/
-        //canvas.drawBitmap(bitmap, 0, 0, paint);
-        Rect cropRect = new Rect(
-                Math.min((int)bitmapTopLeft.x, (int)bitmapBottomLeft.x),
-                Math.min((int)bitmapTopLeft.y, (int)bitmapTopRight.y),
-                Math.max((int)bitmapBottomRight.x, (int)bitmapTopRight.x),
-                Math.max((int)bitmapBottomRight.y, (int)bitmapBottomLeft.y));
-
-        Bitmap cut = Bitmap.createBitmap(
-                bitmap,
-                cropRect.left,
-                cropRect.top,
-                cropRect.width(),
-                cropRect.height()
-        );
-
-        Log.e("stk", "bitmapPoints="
-                + bitmapTopLeft.toString() + " "
-                + bitmapTopRight.toString() + " "
-                + bitmapBottomRight.toString() + " "
-                + bitmapBottomLeft.toString() + " ");
-
-        android.graphics.Point cutTopLeft = new android.graphics.Point();
-        android.graphics.Point cutTopRight = new android.graphics.Point();
-        android.graphics.Point cutBottomLeft = new android.graphics.Point();
-        android.graphics.Point cutBottomRight = new android.graphics.Point();
-
-        cutTopLeft.x = (int)(bitmapTopLeft.x > bitmapBottomLeft.x ? bitmapTopLeft.x - bitmapBottomLeft.x : 0);
-        cutTopLeft.y = (int)( bitmapTopLeft.y > bitmapTopRight.y ? bitmapTopLeft.y - bitmapTopRight.y : 0);
-
-        cutTopRight.x = (int)(bitmapTopRight.x > bitmapBottomRight.x ? cropRect.width() : cropRect.width() - Math.abs(bitmapBottomRight.x - bitmapTopRight.x));
-        cutTopRight.y = (int)(bitmapTopLeft.y > bitmapTopRight.y ? 0 : Math.abs(bitmapTopLeft.y - bitmapTopRight.y));
-
-        cutBottomLeft.x = (int)(bitmapTopLeft.x > bitmapBottomLeft.x ? 0 : Math.abs(bitmapTopLeft.x - bitmapBottomLeft.x));
-        cutBottomLeft.y = (int)(bitmapBottomLeft.y > bitmapBottomRight.y ? cropRect.height() : cropRect.height() - Math.abs(bitmapBottomRight.y - bitmapBottomLeft.y));
-
-        cutBottomRight.x = (int)(bitmapTopRight.x > bitmapBottomRight.x ? cropRect.width() - Math.abs(bitmapBottomRight.x - bitmapTopRight.x) : cropRect.width());
-        cutBottomRight.y = (int)(bitmapBottomLeft.y > bitmapBottomRight.y ? cropRect.height() - Math.abs(bitmapBottomRight.y - bitmapBottomLeft.y) : cropRect.height());
-
-        Log.e("stk", cut.getWidth() + "x" + cut.getHeight());
-        Log.e("stk", "cutPoints="
-                + cutTopLeft.toString() + " "
-                + cutTopRight.toString() + " "
-                + cutBottomRight.toString() + " "
-                + cutBottomLeft.toString() + " ");
-
-
-        float width = cut.getWidth();
-        float height = cut.getHeight();
-
-        float[] src = new float[]{cutTopLeft.x, cutTopLeft.y, cutTopRight.x, cutTopRight.y, cutBottomRight.x, cutBottomRight.y, cutBottomLeft.x, cutBottomLeft.y};
-        float[] dst = new float[]{0, 0, width, 0, width, height, 0, height};
-
-        Matrix matrix = new Matrix();
-        matrix.setPolyToPoly(src, 0, dst, 0, 4);
-        Bitmap stretch = Bitmap.createBitmap(cut.getWidth(), cut.getHeight(), Bitmap.Config.ARGB_8888);
-
-        Canvas stretchCanvas = new Canvas(stretch);
-//            stretchCanvas.drawBitmap(cut, matrix, null);
-        stretchCanvas.concat(matrix);
-        stretchCanvas.drawBitmapMesh(cut, WIDTH_BLOCK, HEIGHT_BLOCK, generateVertices(cut.getWidth(), cut.getHeight()), 0, null, 0, null);
-
-        ivShow.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-        ivShow.setImageBitmap(stretch);
+        Bitmap stretch = BitmapUtils.cropBitmap(points,bitmap);
+        llShow.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+        llShow.setBackground(new BitmapDrawable(getResources(), stretch));
     }
+
+
 
 
     private void savePicture(Mat frame){
@@ -482,48 +378,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Bitmap rectBitmap = Bitmap.createBitmap(bitmap,startX,startY ,
                 Math.min((int) Math.abs(Math.max((righttop.x - leftTop.x),rightbottom.x - leftbottom.x)),maxWidth),
                 Math.min((int)Math.abs( Math.max((leftbottom.y - leftTop.y),rightbottom.y - righttop.y)),maxHeight));
-        ivShow.setImageBitmap(rectBitmap);
-    }
-
-
-
-   /* //识别矩形
-    private void showRectangle(Mat frame){
-        Mat frameData = processImage(frame);
-        Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(frameData, bitmap);
-        String name = System.currentTimeMillis() + "output_image.jpg";
-        String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
-        String fileName = pathResult + ".jpg";
-        Imgcodecs.imwrite(fileName, frameData);
-        //ivShow.setImageBitmap(bitmap);
-        Mat edge=new Mat();
-        Mat contours=new Mat();
-        Imgproc.Canny(frameData,edge,90,270,5,true);
-        List<MatOfPoint> contourList=new ArrayList<>();
-        contours.create(edge.rows(), edge.cols(), CvType.CV_8UC3);
-        Imgproc.findContours(edge,contourList,new Mat(),Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE);
-        Vector<Point> approx;
-        for (int i = 0; i < contourList.size() ; i++) {
-            Imgproc.approxPolyDP(contourList.get(i), approx, arcLength(Mat(contours[i]), true)*0.02, true);
-        }
-        Utils.matToBitmap(contours, bitmap);
-        ivShow.setImageBitmap(bitmap);
-    }*/
-
-    private float[] generateVertices(int widthBitmap, int heightBitmap) {
-
-        float[] vertices=new float[(WIDTH_BLOCK+1)*(HEIGHT_BLOCK+1)*2];
-
-        float widthBlock = (float)widthBitmap/WIDTH_BLOCK;
-        float heightBlock = (float)heightBitmap/HEIGHT_BLOCK;
-
-        for(int i=0;i<=HEIGHT_BLOCK;i++)
-            for(int j=0;j<=WIDTH_BLOCK;j++) {
-                vertices[i * ((HEIGHT_BLOCK+1)*2) + (j*2)] = j * widthBlock;
-                vertices[i * ((HEIGHT_BLOCK+1)*2) + (j*2)+1] = i * heightBlock;
-            }
-        return vertices;
+        llShow.setBackground(new BitmapDrawable(getResources(), rectBitmap));
     }
 
 }

@@ -5,4 +5,175 @@
     <string name="title_canny">canny</string>
     <string name="title_exit">exit</string>
     <string name="title_click">photo</string>
+    <string name="json_string">{
+	"block": [{
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 251,
+					"y": 46
+				},
+				"right_bottom": {
+					"x": 283,
+					"y": 67
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 267,
+					"y": 176
+				},
+				"right_bottom": {
+					"x": 360,
+					"y": 197
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 272,
+					"y": 228
+				},
+				"right_bottom": {
+					"x": 365,
+					"y": 249
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 53,
+					"y": 336
+				},
+				"right_bottom": {
+					"x": 276,
+					"y": 357
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 309,
+					"y": 336
+				},
+				"right_bottom": {
+					"x": 531,
+					"y": 357
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 53,
+					"y": 377
+				},
+				"right_bottom": {
+					"x": 276,
+					"y": 398
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 309,
+					"y": 377
+				},
+				"right_bottom": {
+					"x": 531,
+					"y": 398
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 53,
+					"y": 418
+				},
+				"right_bottom": {
+					"x": 276,
+					"y": 439
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 309,
+					"y": 418
+				},
+				"right_bottom": {
+					"x": 531,
+					"y": 439
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 53,
+					"y": 459
+				},
+				"right_bottom": {
+					"x": 276,
+					"y": 480
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 309,
+					"y": 459
+				},
+				"right_bottom": {
+					"x": 531,
+					"y": 480
+				}
+			}
+		},
+		"type": "text"
+	}, {
+		"line": {
+			"location": {
+				"top_left": {
+					"x": 53,
+					"y": 500
+				},
+				"right_bottom": {
+					"x": 276,
+					"y": 521
+				}
+			}
+		},
+		"type": "text"
+	}]
+}</string>
 </resources>
