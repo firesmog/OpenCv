@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private int llWidth;
     private int llHeight;
     private ActionBar actionBar;
+    private Mat mRgbaOrigin;
 
     /**
      * 第一次创建时调用
@@ -195,8 +196,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 //showDifferentColorImage(mRgba);
                 getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
-                showAutoCropPicture(mRgba);
-                //savePicture(mRgba);
+                //showAutoCropPicture(mRgba);
+                savePicture(mRgba);
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
@@ -224,6 +225,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         switch (viewMode) {
             case VIEW_MODE_GRAY:
                 hasSaved = false;
+                mRgbaOrigin = inputFrame.rgba();
                 Imgproc.cvtColor(inputFrame.gray(), mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
                 break;
             case VIEW_MODE_RGBA:
@@ -399,7 +401,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         int startY = (int) Math.min(leftTop.y,righttop.y);
         int maxWidth = edge.width() - startX;
         int maxHeight = edge.height() - startY;
-        Utils.matToBitmap(frame, bitmap);
+        Utils.matToBitmap(mRgbaOrigin, bitmap);
 
 
         //add by lzy for class exam demo
@@ -423,13 +425,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             location.setTop_left(new com.readboy.bean.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
             location.setRight_bottom(new com.readboy.bean.Point((int)(rightbottom.x + location.getRight_bottom().getX()*ratioWidth),(int)(rightbottom.y + location.getRight_bottom().getY()*ratioHeight)));
         }
-
-
         llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
         LogUtils.d("ratioWidth = " + llWidth/width + " , ratioHeight = " + llHeight/height + ",block size = " + blocks.length );
 
-        addView(llWidth/600,llHeight/800);
-        //addViewForWholeTest(llWidth/width,llHeight/height,blocks);
+        //addView(llWidth/600,llHeight/800);
+        addViewForWholeTest(llWidth/width,llHeight/height,blocks);
 
     }
 
@@ -461,6 +461,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             // 调用一个参数的addView方法
             llShow.addView(child,params);
         }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
     }
 
     public void addView(double ratioWidth , double ratioHeight) {
@@ -492,6 +494,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             // 调用一个参数的addView方法
             llShow.addView(child,params);
         }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 }
 
