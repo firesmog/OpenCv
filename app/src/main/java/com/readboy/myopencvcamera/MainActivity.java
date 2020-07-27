@@ -18,23 +18,34 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import android.Manifest;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.readboy.bean.Block;
 import com.readboy.bean.Data;
+import com.readboy.bean.Location;
+import com.readboy.log.LogUtils;
 import com.readboy.util.BitmapUtils;
 import com.readboy.util.GsonUtil;
 
@@ -81,9 +92,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         }
     };
     private boolean hasSaved;
-    private LinearLayout llShow;
+    private RelativeLayout llShow;
     private MatOfPoint2f approxCurve;
     private double lastArea;
+    private int llWidth;
+    private int llHeight;
+    private ActionBar actionBar;
 
     /**
      * 第一次创建时调用
@@ -101,14 +115,19 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         }
         //将窗口变亮
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
-
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.javaCameraView);
-        llShow = (LinearLayout) findViewById(R.id.iv_show);
+        llShow = (RelativeLayout) findViewById(R.id.iv_show);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        Data data = GsonUtil.gsonToBean(getString(R.string.json_string),Data.class);
-        Log.d("TAGFJUHU",data.toString());
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+        llWidth = outMetrics.widthPixels;
+        llHeight = outMetrics.heightPixels + 72 ;
+        LogUtils.i( "widthPixels = " + llWidth  + ",heightPixels = " + llHeight);
+
+
 
     }
 
@@ -173,9 +192,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 finish();
                 break;
             case R.id.clickItem:
-                 //savePicture(mRgba);
                 //showDifferentColorImage(mRgba);
+                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+
                 showAutoCropPicture(mRgba);
+                //savePicture(mRgba);
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
@@ -183,6 +204,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         }
         return true;
     }
+
 
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
@@ -226,11 +248,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
     private Mat processImage( Mat gray ) {
         Mat b = new Mat();
-        //Mat a = new Mat();
 
         //高斯模糊效果较好，size里的参数只能为奇数
         Imgproc.GaussianBlur(gray,b, new Size(5,5),0);
-        //Imgproc.medianBlur(a , b, 3);
         Mat t = new Mat();
         Imgproc.threshold(b, t, 125, 300, THRESH_BINARY);
         return t;
@@ -344,6 +364,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Bitmap stretch = BitmapUtils.cropBitmap(points,bitmap);
         llShow.setBackgroundColor(getResources().getColor(R.color.colorAccent));
         llShow.setBackground(new BitmapDrawable(getResources(), stretch));
+        double ratioHeight  = llHeight*1.0d / 800;
+        double ratioWidth = llWidth *1.0d/ 600;
+        LogUtils.d("ratioHeight = " + ratioHeight + " , ratioWidth = " + ratioWidth );
+        addView(ratioWidth,ratioHeight);
+
     }
 
 
@@ -375,12 +400,55 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         int maxWidth = edge.width() - startX;
         int maxHeight = edge.height() - startY;
         Utils.matToBitmap(frame, bitmap);
+
+
+        //add by lzy for class exam demo
+        //试卷宽高分别为600 和 720 px ,需要先计算拍照得宽高和真实试卷宽高得比例才好定位
+        //这里要考虑到展示到设备上得时候，图片可能已经拉伸或压缩了，所以不推荐使用图片比例计算
+        double height = Math.min(leftbottom.y - leftTop.y , rightbottom.y - righttop.y);
+        double width = Math.min(rightbottom.x - leftbottom.x, righttop.x - leftTop.x);
+        double ratioHeight  = height / 720;
+        double ratioWidth = width / 600;
         Bitmap rectBitmap = Bitmap.createBitmap(bitmap,startX,startY ,
                 Math.min((int) Math.abs(Math.max((righttop.x - leftTop.x),rightbottom.x - leftbottom.x)),maxWidth),
                 Math.min((int)Math.abs( Math.max((leftbottom.y - leftTop.y),rightbottom.y - righttop.y)),maxHeight));
         llShow.setBackground(new BitmapDrawable(getResources(), rectBitmap));
     }
 
+
+
+
+    public void addView(double ratioWidth , double ratioHeight) {
+        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_c),Data.class);
+        Block[] blocks = data.getBlock();
+        for(int j = 0 ; j< blocks.length ; j++ ){
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
+            Block block = blocks[j];
+            Location location = block.getLine().getLocation();
+            //获取中位点
+            double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
+            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY();
+            TextView child = new TextView(this);
+            child.setTextSize(20);
+            String result = "占位符" + (j + 1);
+            child.setText(result);
+            LogUtils.d("midX  = " + midX  + ",midY === " + midY + ",location" + location.toString());
+
+
+            if(j % 2 == 0){
+                child.setTextColor(getResources().getColor(R.color.green));
+
+            }else {
+                child.setTextColor(getResources().getColor(R.color.red));
+            }
+            params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight) ,0,0);
+            child.setLayoutParams(params);
+            // 调用一个参数的addView方法
+            llShow.addView(child,params);
+        }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
 }
 
 
