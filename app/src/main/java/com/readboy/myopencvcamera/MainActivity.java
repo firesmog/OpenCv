@@ -407,16 +407,61 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         //这里要考虑到展示到设备上得时候，图片可能已经拉伸或压缩了，所以不推荐使用图片比例计算
         double height = Math.min(leftbottom.y - leftTop.y , rightbottom.y - righttop.y);
         double width = Math.min(rightbottom.x - leftbottom.x, righttop.x - leftTop.x);
-        double ratioHeight  = height / 720;
+        double ratioHeight  = height / 800;
         double ratioWidth = width / 600;
-        Bitmap rectBitmap = Bitmap.createBitmap(bitmap,startX,startY ,
-                Math.min((int) Math.abs(Math.max((righttop.x - leftTop.x),rightbottom.x - leftbottom.x)),maxWidth),
-                Math.min((int)Math.abs( Math.max((leftbottom.y - leftTop.y),rightbottom.y - righttop.y)),maxHeight));
-        llShow.setBackground(new BitmapDrawable(getResources(), rectBitmap));
+
+
+        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_c),Data.class);
+        Block[] blocks = data.getBlock();
+
+        //修改各个答案显示在照片里的坐标值
+        for(int j = 0 ; j< blocks.length ; j++ ){
+            // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
+            Block block = blocks[j];
+            Location location = block.getLine().getLocation();
+            //获取中位点
+            location.setTop_left(new com.readboy.bean.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
+            location.setRight_bottom(new com.readboy.bean.Point((int)(rightbottom.x + location.getRight_bottom().getX()*ratioWidth),(int)(rightbottom.y + location.getRight_bottom().getY()*ratioHeight)));
+        }
+
+
+        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
+        LogUtils.d("ratioWidth = " + llWidth/width + " , ratioHeight = " + llHeight/height + ",block size = " + blocks.length );
+
+        addView(llWidth/600,llHeight/800);
+        //addViewForWholeTest(llWidth/width,llHeight/height,blocks);
+
     }
 
 
+    public void addViewForWholeTest(double ratioWidth , double ratioHeight,Block[] blocks ) {
+        for(int j = 0 ; j< blocks.length ; j++ ){
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
+            Block block = blocks[j];
+            Location location = block.getLine().getLocation();
+            //获取中位点
+            double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
+            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY();
+            TextView child = new TextView(this);
+            child.setTextSize(20);
+            String result = "占位符" + (j + 1);
+            child.setText(result);
+            LogUtils.d("midX  = " + midX  + ",midY === " + midY + ",location" + location.toString());
 
+
+            if(j % 2 == 0){
+                child.setTextColor(getResources().getColor(R.color.green));
+
+            }else {
+                child.setTextColor(getResources().getColor(R.color.red));
+            }
+            params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight) ,0,0);
+            child.setLayoutParams(params);
+            // 调用一个参数的addView方法
+            llShow.addView(child,params);
+        }
+    }
 
     public void addView(double ratioWidth , double ratioHeight) {
         Data data = GsonUtil.gsonToBean(getString(R.string.json_string_c),Data.class);
@@ -447,7 +492,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             // 调用一个参数的addView方法
             llShow.addView(child,params);
         }
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 }
 
