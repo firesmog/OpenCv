@@ -412,6 +412,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         double ratioHeight  = height / 800;
         double ratioWidth = width / 600;
 
+        LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight);
+
+
 
         Data data = GsonUtil.gsonToBean(getString(R.string.json_string_c),Data.class);
         Block[] blocks = data.getBlock();
@@ -421,28 +424,29 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
             Block block = blocks[j];
             Location location = block.getLine().getLocation();
-            //获取中位点
             location.setTop_left(new com.readboy.bean.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
-            location.setRight_bottom(new com.readboy.bean.Point((int)(rightbottom.x + location.getRight_bottom().getX()*ratioWidth),(int)(rightbottom.y + location.getRight_bottom().getY()*ratioHeight)));
+            location.setRight_bottom(new com.readboy.bean.Point((int)(leftTop.x + location.getRight_bottom().getX()*ratioWidth),(int)(leftTop.y + location.getRight_bottom().getY()*ratioHeight)));
         }
         llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
         LogUtils.d("ratioWidth = " + llWidth/width + " , ratioHeight = " + llHeight/height + ",block size = " + blocks.length );
 
         //addView(llWidth/600,llHeight/800);
-        addViewForWholeTest(llWidth/width,llHeight/height,blocks);
+        addViewForWholeTest(1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),blocks);
+       // addViewForWholeTest(llWidth/600,llHeight/800,blocks);
 
     }
 
 
-    public void addViewForWholeTest(double ratioWidth , double ratioHeight,Block[] blocks ) {
+    public void addViewForWholeTest(double ratioWidth , double ratioHeight,Block[] blocks) {
         for(int j = 0 ; j< blocks.length ; j++ ){
             RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
             Block block = blocks[j];
             Location location = block.getLine().getLocation();
             //获取中位点
-            double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
-            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY();
+            // 30 是textSize的1.5倍换算过来的
+            double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/3 + location.getTop_left().getX();
+            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY() -30;
             TextView child = new TextView(this);
             child.setTextSize(20);
             String result = "占位符" + (j + 1);
@@ -462,7 +466,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             llShow.addView(child,params);
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
     }
 
     public void addView(double ratioWidth , double ratioHeight) {
