@@ -440,11 +440,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
             List<Point> pointScrop = new ArrayList<>();
             int marginMore = 8;
-            double midY = 1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 + location.getTop_left().getY();
-            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX() *ratioWidth )-1.4* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight)- 2.5*marginMore ));
-            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth )  + 1.4* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight) - 2.5*marginMore));
-            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX()*ratioWidth)  - 1.4*marginMore,(leftTop.y + location.getRight_bottom().getY()*ratioHeight)  + marginMore ));
-            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth ) + 1.4* marginMore ,(leftTop.y + location.getRight_bottom().getY()*ratioHeight   + marginMore )));
+            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX() *ratioWidth )-1.5* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight)- 2.7*marginMore ));
+            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth )  + 1.5* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight) - 2.7*marginMore));
+            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX()*ratioWidth)  - 1.5*marginMore,(leftTop.y + location.getRight_bottom().getY()*ratioHeight)  + marginMore ));
+            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth ) + 1.5* marginMore ,(leftTop.y + location.getRight_bottom().getY()*ratioHeight   + marginMore )));
             Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
             BitmapUtils.saveImageToGallery(stretch,MainActivity.this,j);
 
