@@ -1,5 +1,6 @@
 package com.readboy.myopencvcamera;
 
+import org.apache.commons.codec.binary.Base64;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
@@ -25,6 +26,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
@@ -47,13 +49,26 @@ import com.readboy.bean.Block;
 import com.readboy.bean.Data;
 import com.readboy.bean.Location;
 import com.readboy.log.LogUtils;
+import com.readboy.net.FileUtil;
+import com.readboy.net.HttpUtil;
+import com.readboy.net.NetUtil;
+import com.readboy.net.bean.BaseResponse;
+import com.readboy.net.bean.Line;
+import com.readboy.net.bean.Word;
 import com.readboy.util.BitmapUtils;
 import com.readboy.util.GsonUtil;
+import com.readboy.util.PhotoUtil;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
+import static com.readboy.net.NetUtil.WEBOCR_URL;
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
 
 @SuppressLint("NewApi")
@@ -70,6 +85,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private static final int VIEW_MODE_CANNY = 2;
     private static final int VIEW_MODE_CLICK = 3;
     private static final int VIEW_MODE_FEATURES = 5;
+
+    private static  final int TAKE_PHOTO_REQUEST = 1130;
+    private static final int OPEN_CANMER = 1122;
+    private String[] answer = {"Read", "boy", "girl", "child", "home", "Car", "bike", "book", "good","bad","tiger","apple","android","target","parent"
+            ,"bus","cow","horse","house","water","fire","smog","at","where","when","how","what","why","ask","which"};
+    private List<String> results = new ArrayList<>();
 
     private int mViewMode;
     private Mat mRgba;
@@ -445,8 +466,17 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX()*ratioWidth)  - 1.5*marginMore,(leftTop.y + location.getRight_bottom().getY()*ratioHeight)  + marginMore ));
             pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth ) + 1.5* marginMore ,(leftTop.y + location.getRight_bottom().getY()*ratioHeight   + marginMore )));
             Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
-            BitmapUtils.saveImageToGallery(stretch,MainActivity.this,j);
+            String root = getExternalCacheDir().getAbsolutePath();
+            String dirName = "erweima16";
+            File appDir = new File(root , dirName);
+            if (!appDir.exists()) {
+                appDir.mkdirs();
+            }
 
+            //文件名为时间
+            String path = "Image" + j + ".jpg";
+            BitmapUtils.saveImageToGallery(stretch,MainActivity.this,j);
+            doNetRequest(stretch);
 
             location.setTop_left(new com.readboy.bean.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
             location.setRight_bottom(new com.readboy.bean.Point((int)(leftTop.x + location.getRight_bottom().getX()*ratioWidth),(int)(leftTop.y + location.getRight_bottom().getY()*ratioHeight)));
@@ -529,6 +559,74 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             llShow.addView(child,params);
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    private void doNetRequest(final Bitmap bitmap) {
+        LogUtils.d("doNetRequest null 111== bitmap");
+
+        if (null == bitmap){
+            LogUtils.d("doNetRequest null == bitmap");
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Map<String, String> header = null;
+                try {
+                    header = NetUtil.constructHeader("en", "true");
+
+                    //Bitmap转换成byte[]
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] imageByteArray = baos.toByteArray();
+                    //byte[] imageByteArray = FileUtil.read2ByteArray(path,1);
+                    String imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
+                    String bodyParam = "image=" + imageBase64;
+                    LogUtils.d("result == " + bodyParam.length());
+                    final String result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam);
+                    Log.e("TAG", "result == " + result);
+                    dealListen(result);
+
+                } catch (Exception e) {
+                    LogUtils.d("error = " + e);
+                }
+            }
+        }).start();
+
+
+
+    }
+
+    private void dealListen(String result){
+        if (!TextUtils.isEmpty(result)) {
+            BaseResponse baseResponse = GsonUtil.gsonToBean(result, BaseResponse.class);
+            if (baseResponse != null) {
+                Log.e("TAG", "result == " + baseResponse.toString());
+                Line[] lines = baseResponse.getData().getBlock()[0].getLine();
+                if (null != lines && lines.length > 0) {
+                    List<Line> list = Arrays.asList(lines);
+                    List<Line> lineList = new ArrayList(list);
+                    Collections.sort(lineList);
+
+                    for (Line line : lineList) {
+                        LogUtils.d("dealListen line = " + line.toString());
+                        Word[] words = line.getWord();
+                        for (Word word : words) {
+                            if(!PhotoUtil.isContainChinese(word.getContent()) && !PhotoUtil.isContainsNum(word.getContent()) && !PhotoUtil.check(word.getContent())){
+                                results.add(word.getContent());
+                            }
+                        }
+                    }
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //addView();
+
+                    }
+                });
+            }
+        }
     }
 }
 
