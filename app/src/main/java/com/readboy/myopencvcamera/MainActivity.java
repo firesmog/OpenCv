@@ -18,6 +18,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -55,6 +56,7 @@ import java.util.Random;
 
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
 
+@SuppressLint("NewApi")
 
 public class MainActivity extends AppCompatActivity implements CvCameraViewListener2 {
     private static final String TAG = "TAG_CameraActivity";
@@ -376,6 +378,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
 
 
+    @SuppressLint("NewApi")
     private void savePicture(Mat frame){
         Mat frameData = processImage(frame);
         List<Mat> mats = new ArrayList<>();
@@ -397,26 +400,35 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Point righttop=points.get(1);
         Point leftbottom=points.get(2);
         Point rightbottom=points.get(3);
-        int startX = (int) Math.min(leftTop.x,leftbottom.x);
-        int startY = (int) Math.min(leftTop.y,righttop.y);
-        int maxWidth = edge.width() - startX;
-        int maxHeight = edge.height() - startY;
         Utils.matToBitmap(mRgbaOrigin, bitmap);
 
 
         //add by lzy for class exam demo
         //试卷宽高分别为600 和 720 px ,需要先计算拍照得宽高和真实试卷宽高得比例才好定位
         //这里要考虑到展示到设备上得时候，图片可能已经拉伸或压缩了，所以不推荐使用图片比例计算
-        double height = Math.min(leftbottom.y - leftTop.y , rightbottom.y - righttop.y);
-        double width = Math.min(rightbottom.x - leftbottom.x, righttop.x - leftTop.x);
-        double ratioHeight  = height / 800;
-        double ratioWidth = width / 600;
+        double leftHeight = leftbottom.y - leftTop.y;
+        double rightHeight = rightbottom.y - righttop.y;
+        double topWidth =  righttop.x - leftTop.x;
+        double bottomWidth = rightbottom.x - leftbottom.x;
 
-        LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight);
+        double height = Math.min(leftHeight, rightHeight);
+        double height2 = Math.max(leftHeight, rightHeight);
+        double width = Math.min(bottomWidth, topWidth);
+        double width2 = Math.max(bottomWidth, topWidth);
+
+        int examHeight = 933;
+        int examWidth = 662;
+        double gapWidth = width2 - width;
+        double ratioHeight  = height /examHeight ;
+        double ratioWidth = width / examWidth;
+
+        LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight   );
+        LogUtils.d("leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth  );
+        LogUtils.d("ratioWidth = " +  width  + " , ratioHeight00 = " + height  + ",maxWidth =" + width2 + ",maxHeight = " + height2  + ",gapWidth = " + gapWidth);
 
 
 
-        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_c),Data.class);
+        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_d),Data.class);
         Block[] blocks = data.getBlock();
 
         //修改各个答案显示在照片里的坐标值
@@ -424,11 +436,30 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
             Block block = blocks[j];
             Location location = block.getLine().getLocation();
+            LogUtils.d("Location == = " + location.toString() + " ,j =  = " + j + ",leftTop. x = " + leftTop. x  + ",leftTop. y = " + leftTop. y);
+
+            List<Point> pointScrop = new ArrayList<>();
+            int marginMore = 8;
+            double midY = 1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 + location.getTop_left().getY();
+            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX() *ratioWidth )-1.4* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight)- 2.5*marginMore ));
+            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth )  + 1.4* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight) - 2.5*marginMore));
+            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX()*ratioWidth)  - 1.4*marginMore,(leftTop.y + location.getRight_bottom().getY()*ratioHeight)  + marginMore ));
+            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth ) + 1.4* marginMore ,(leftTop.y + location.getRight_bottom().getY()*ratioHeight   + marginMore )));
+            Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
+            BitmapUtils.saveImageToGallery(stretch,MainActivity.this,j);
+
+
             location.setTop_left(new com.readboy.bean.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
             location.setRight_bottom(new com.readboy.bean.Point((int)(leftTop.x + location.getRight_bottom().getX()*ratioWidth),(int)(leftTop.y + location.getRight_bottom().getY()*ratioHeight)));
+            LogUtils.d("Location111 == = " + (leftTop. x + location.getTop_left().getX()*ratioWidth) + " ,j =  = " + j + ",leftTop. y = " + (leftTop.y + location.getTop_left().getY()*ratioHeight) );
+            LogUtils.d("Location222 == = " + (leftTop. x + location.getRight_bottom().getX()*ratioWidth ) + " ,j =  = " + j + ",leftTop. y = " + (leftTop.y + location.getRight_bottom().getY()*ratioHeight) );
+
+
+
+
         }
         llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
-        LogUtils.d("ratioWidth = " + llWidth/width + " , ratioHeight = " + llHeight/height + ",block size = " + blocks.length );
+        LogUtils.d("ratioWidth1111 = " + llWidth/width + " , ratioHeight1111 = " + llHeight/height + ",block size = " + blocks.length );
 
         //addView(llWidth/600,llHeight/800);
         addViewForWholeTest(1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),blocks);
@@ -439,14 +470,14 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     public void addViewForWholeTest(double ratioWidth , double ratioHeight,Block[] blocks) {
         for(int j = 0 ; j< blocks.length ; j++ ){
-            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
             Block block = blocks[j];
             Location location = block.getLine().getLocation();
             //获取中位点
             // 30 是textSize的1.5倍换算过来的
             double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/3 + location.getTop_left().getX();
-            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY() -30;
+            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY() - 20;
             TextView child = new TextView(this);
             child.setTextSize(20);
             String result = "占位符" + (j + 1);
@@ -460,6 +491,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             }else {
                 child.setTextColor(getResources().getColor(R.color.red));
             }
+            child.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
             params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight) ,0,0);
             child.setLayoutParams(params);
             // 调用一个参数的addView方法
