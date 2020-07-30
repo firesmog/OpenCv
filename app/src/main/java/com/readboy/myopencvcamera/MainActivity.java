@@ -476,18 +476,15 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             //文件名为时间
             String path = "Image" + j + ".jpg";
             BitmapUtils.saveImageToGallery(stretch,MainActivity.this,j);
-            doNetRequest(stretch);
 
             location.setTop_left(new com.readboy.bean.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
             location.setRight_bottom(new com.readboy.bean.Point((int)(leftTop.x + location.getRight_bottom().getX()*ratioWidth),(int)(leftTop.y + location.getRight_bottom().getY()*ratioHeight)));
             LogUtils.d("Location111 == = " + (leftTop. x + location.getTop_left().getX()*ratioWidth) + " ,j =  = " + j + ",leftTop. y = " + (leftTop.y + location.getTop_left().getY()*ratioHeight) );
             LogUtils.d("Location222 == = " + (leftTop. x + location.getRight_bottom().getX()*ratioWidth ) + " ,j =  = " + j + ",leftTop. y = " + (leftTop.y + location.getRight_bottom().getY()*ratioHeight) );
-
-
-
-
         }
         llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
+        doNetRequest(bitmap);
+
         LogUtils.d("ratioWidth1111 = " + llWidth/width + " , ratioHeight1111 = " + llHeight/height + ",block size = " + blocks.length );
 
         //addView(llWidth/600,llHeight/800);
