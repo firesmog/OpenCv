@@ -14,7 +14,6 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -68,8 +67,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
@@ -152,8 +149,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
         llWidth = outMetrics.widthPixels;
         llHeight = outMetrics.heightPixels + 72 ;
-        ExamBean data = DeviceUtil.getExamData(this);
-        LogUtils.i( "widthPixels = " + llWidth  + ",heightPixels = " + llHeight + ",data == " + data.toString());
+
 
     }
 
@@ -170,10 +166,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     public void onResume() {
         super.onResume();
         if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            LogUtils.d( "Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, mLoaderCallback);
         } else {
-            Log.d(TAG, "OpenCV library found inside package. Using it!");
+            LogUtils.d( "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
     }
@@ -278,11 +274,13 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
     private Mat processImage( Mat gray ) {
         Mat b = new Mat();
+        Mat s = new Mat();
 
         //高斯模糊效果较好，size里的参数只能为奇数
-        Imgproc.GaussianBlur(gray,b, new Size(5,5),0);
+       //Imgproc.GaussianBlur(gray,b, new Size(5,5),0);
+       Imgproc.Laplacian(gray,s,-1,3);//Laplace边缘提取
         Mat t = new Mat();
-        Imgproc.threshold(b, t, 125, 300, THRESH_BINARY);
+        Imgproc.threshold(s, t, 125, 255, THRESH_BINARY);
         return t;
     }
 
@@ -290,34 +288,31 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     public List<Point> getCornersByContour(Mat imgsource){
         List<MatOfPoint> contours=new ArrayList<>();
         //轮廓检测
-        Imgproc.findContours(imgsource,contours,new Mat(),Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE);
-        Log.d(TAG,"findContours size = " + contours.size());
+        Imgproc.findContours(imgsource,contours,new Mat(),Imgproc.RETR_EXTERNAL,Imgproc.CHAIN_APPROX_SIMPLE);
+        LogUtils.d("findContours size = " + contours.size());
         double maxArea= 20;
-        int maxAreaIdx=-1;
         MatOfPoint temp_contour=contours.get(0);//假设最大的轮廓在index=0处
         MatOfPoint2f approxCurve=new MatOfPoint2f();
         for (int idx=0;idx<contours.size();idx++){
             temp_contour=contours.get(idx);
             double contourarea=Imgproc.contourArea(temp_contour);
-            Log.d(TAG,"findContours area = " + contourarea);
+            LogUtils.d("findContours area = " + contourarea);
 
             //当前轮廓面积比最大的区域面积大就检测是否为四边形
             if (contourarea > maxArea){
                 //检测contour是否是四边形
                 MatOfPoint2f new_mat=new MatOfPoint2f(temp_contour.toArray());
-                int contourSize= (int) temp_contour.total();
                 MatOfPoint2f approxCurve_temp=new MatOfPoint2f();
                 //对图像轮廓点进行多边形拟合
-                Imgproc.approxPolyDP(new_mat,approxCurve_temp,contourSize*0.07,true);
-                if (approxCurve_temp.total()==4){
+                Imgproc.approxPolyDP(new_mat,approxCurve_temp,15,true);
+                if (approxCurve_temp.total() == 4 ){
                     maxArea=contourarea;
-                    maxAreaIdx=idx;
                     approxCurve=approxCurve_temp;
-                    Log.d(TAG,"findContours22222 area = " + contourarea);
+                    LogUtils.d("findContours22222 area = " + contourarea);
                 }
             }
         }
-        Log.d(TAG,"findContours area max  = " + maxArea);
+        LogUtils.d("findContours area max  = " + maxArea);
         return BitmapUtils.getImagePoint(approxCurve);
     }
 
@@ -334,12 +329,14 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         //ivShow.setImageBitmap(bitmap);
         Mat edge=new Mat();
         Mat contours=new Mat();
-        Imgproc.Canny(frameData,edge,90,270,5,true);
+        Imgproc.Canny(frameData,edge,90,225,5,true);
         List<MatOfPoint> contourList=new ArrayList<>();
         contours.create(edge.rows(), edge.cols(), CvType.CV_8UC3);
         Imgproc.findContours(edge,contourList,new Mat(),Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE);
+        LogUtils.d("findContours area max11111  = " +contourList.size());
         for (int i = 0; i < contourList.size() ; i++) {
             double curArea = Imgproc.contourArea(contourList.get(i));
+
             if(  curArea < 3000){
                 continue;
             }
@@ -354,12 +351,13 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             approxCurve = new MatOfPoint2f();
             double epsilon = 15;
             Imgproc.approxPolyDP(curve, approxCurve, epsilon,true );
+            LogUtils.d("findContours area max333333  = " + approxCurve.total() );
 
-            if(approxCurve.total() != 4){
+            if(approxCurve.total() < 4 && approxCurve.total() > 7){
                 continue;
             }
 
-            Log.d(TAG,"findContours area max  = " + Imgproc.contourArea(contourList.get(i))  +  ",length = " + Imgproc.arcLength(approxCurve,true));
+            LogUtils.d("findContours area max  = " + Imgproc.contourArea(contourList.get(i))  +  ",length = " + Imgproc.arcLength(approxCurve,true));
 
 
             List<Point> points = BitmapUtils.getImagePoint(approxCurve);
@@ -388,7 +386,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Utils.matToBitmap(frame, bitmap);
         List<Point> points = getCornersByContour(edge);
         for (Point point : points) {
-            Log.d(TAG,"point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
+            LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
         }
 
         Bitmap stretch = BitmapUtils.cropBitmap(points,bitmap);
@@ -397,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         double ratioHeight  = llHeight*1.0d / 800;
         double ratioWidth = llWidth *1.0d/ 600;
         LogUtils.d("ratioHeight = " + ratioHeight + " , ratioWidth = " + ratioWidth );
-        addView(ratioWidth,ratioHeight);
+        //addView(ratioWidth,ratioHeight);
 
     }
 
@@ -593,7 +591,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Imgproc.Canny(frameData,edge,90,270,5,true);
         List<Point> points = getCornersByContour(edge);
         for (Point point : points) {
-            Log.d(TAG,"point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
+            LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
         }
         Point leftTop = points.get(0);
         Point righttop=points.get(1);
@@ -752,6 +750,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             //byte[] imageByteArray = FileUtil.read2ByteArray(path,1);
             String imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
             String bodyParam = "image=" + imageBase64;
+            LogUtils.d("result == " + "body size = " + imageByteArray.length);
+
             final String result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam);
             LogUtils.d("result == " + result);
             switch (type){
@@ -864,7 +864,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         //获取中位点
         // 30 是textSize的1.5倍换算过来的
         double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
-        double midY =  location.getTop_left().getY() - 30 ;
+        double midY =  location.getTop_left().getY() - 35 ;
         TextView child = new TextView(this);
         child.setTextSize(20);
         child.setText(result);
