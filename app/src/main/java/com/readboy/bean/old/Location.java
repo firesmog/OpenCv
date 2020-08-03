@@ -1,8 +1,16 @@
-package com.readboy.bean;
+package com.readboy.bean.old;
 
 public class Location {
     private Point right_bottom;
     private Point top_left;
+
+    public Location() {
+    }
+
+    public Location(Point right_bottom, Point top_left) {
+        this.right_bottom = right_bottom;
+        this.top_left = top_left;
+    }
 
     public Point getRight_bottom() {
         return right_bottom;

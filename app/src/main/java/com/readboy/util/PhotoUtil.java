@@ -104,4 +104,18 @@ public class PhotoUtil {
         bitmap.recycle();
         return newBitmap;
     }
+
+    /**
+     * 判断一个字符串是否为字母
+     * @param fstrData
+     * @return
+     */
+    public static boolean checkEnglish(String fstrData) {
+        char c = fstrData.charAt(0);
+        if (((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

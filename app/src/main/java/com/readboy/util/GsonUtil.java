@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -25,7 +26,8 @@ public class GsonUtil {
     private static Gson gson = null;
     static {
         if (gson == null) {
-            gson = new Gson();
+           gson = new GsonBuilder().disableHtmlEscaping().create();
+            //gson = new Gson();
         }
     }
 

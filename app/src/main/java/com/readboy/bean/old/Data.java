@@ -1,4 +1,4 @@
-package com.readboy.bean;
+package com.readboy.bean.old;
 
 import java.util.Arrays;
 

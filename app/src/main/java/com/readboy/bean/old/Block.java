@@ -1,6 +1,4 @@
-package com.readboy.bean;
-
-import java.util.Arrays;
+package com.readboy.bean.old;
 
 public class Block {
     private Line line;

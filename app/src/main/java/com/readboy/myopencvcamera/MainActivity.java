@@ -20,10 +20,8 @@ import org.opencv.imgproc.Imgproc;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -36,7 +34,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -45,17 +42,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.readboy.bean.Block;
-import com.readboy.bean.Data;
-import com.readboy.bean.Location;
+import com.readboy.bean.newexam.Answer;
+import com.readboy.bean.newexam.Children;
+import com.readboy.bean.newexam.ChildrenQuestion;
+import com.readboy.bean.newexam.ExamBean;
+import com.readboy.bean.old.Block;
+import com.readboy.bean.old.Data;
+import com.readboy.bean.old.Location;
 import com.readboy.log.LogUtils;
-import com.readboy.net.FileUtil;
 import com.readboy.net.HttpUtil;
 import com.readboy.net.NetUtil;
 import com.readboy.net.bean.BaseResponse;
 import com.readboy.net.bean.Line;
 import com.readboy.net.bean.Word;
 import com.readboy.util.BitmapUtils;
+import com.readboy.util.DeviceUtil;
 import com.readboy.util.GsonUtil;
 import com.readboy.util.PhotoUtil;
 
@@ -67,6 +68,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
@@ -149,11 +152,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
         llWidth = outMetrics.widthPixels;
         llHeight = outMetrics.heightPixels + 72 ;
-        LogUtils.i( "widthPixels = " + llWidth  + ",heightPixels = " + llHeight);
-
-
+        ExamBean data = DeviceUtil.getExamData(this);
+        LogUtils.i( "widthPixels = " + llWidth  + ",heightPixels = " + llHeight + ",data == " + data.toString());
 
     }
+
+
 
     @Override
     public void onPause() {
@@ -220,7 +224,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
                 //showAutoCropPicture(mRgba);
-                savePicture(mRgba);
+                //savePicture(mRgba);
+                savePictureAccordExam(mRgba);
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
@@ -398,6 +403,179 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
 
 
+    @SuppressLint("NewApi")
+    private void savePictureAccordExam(Mat frame){
+        Mat frameData = processImage(frame);
+        List<Mat> mats = new ArrayList<>();
+        //多通道分离出单通道
+        final Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(frameData, bitmap);
+        String name = System.currentTimeMillis() + "output_image.jpg";
+        String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
+        String fileName = pathResult + ".jpg";
+        Imgcodecs.imwrite(fileName, frameData);
+        //ivShow.setImageBitmap(bitmap);
+        Mat edge=new Mat();
+        Imgproc.Canny(frameData,edge,90,270,5,true);
+        List<Point> points = getCornersByContour(edge);
+        for (Point point : points) {
+            LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
+        }
+        final Point leftTop = points.get(0);
+        Point righttop=points.get(1);
+        Point leftbottom=points.get(2);
+        Point rightbottom=points.get(3);
+        Utils.matToBitmap(mRgbaOrigin, bitmap);
+
+
+        //add by lzy for class exam demo
+        //试卷宽高分别为600 和 720 px ,需要先计算拍照得宽高和真实试卷宽高得比例才好定位
+        //这里要考虑到展示到设备上得时候，图片可能已经拉伸或压缩了，所以不推荐使用图片比例计算
+        double leftHeight = leftbottom.y - leftTop.y;
+        double rightHeight = rightbottom.y - righttop.y;
+        double topWidth =  righttop.x - leftTop.x;
+        double bottomWidth = rightbottom.x - leftbottom.x;
+
+        double height = Math.min(leftHeight, rightHeight);
+        double height2 = Math.max(leftHeight, rightHeight);
+        double width = Math.min(bottomWidth, topWidth);
+        double width2 = Math.max(bottomWidth, topWidth);
+
+        ExamBean data = DeviceUtil.getExamData(this);
+        int examHeight = data.getHeight();
+        int examWidth = data.getWidth();
+        double gapWidth = width2 - width;
+        final double ratioHeight  = height/examHeight ;
+        final double ratioWidth = width/examWidth;
+        LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight   );
+        LogUtils.d("ratioWidth leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth  );
+        LogUtils.d("ratioWidth  width = " +  width  + " , ratioHeight00 = " + height  + ",maxWidth =" + width2 + ",maxHeight = " + height2  + ",gapWidth = " + gapWidth);
+        List<Children> bigQuestion = data.getChildren();
+        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
+
+        for (final Children children : bigQuestion) {
+            switch (children.getType()){
+                case 10001:
+                    //1.处理选择题
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dealChooseQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
+                        }
+                    }).start();
+
+                    break;
+                case 10006:
+                    //2.处理主观填空题
+                    //dealListenQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
+
+
+                    break;
+                case 10023:
+                    //3.处理听力填空题
+                   new Thread(new Runnable() {
+                       @Override
+                       public void run() {
+                           dealListenQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
+                       }
+                   }).start();
+                    break;
+            }
+        }
+
+
+    }
+
+    private void dealChooseQuestion(Children children, Point leftTop, double ratioWidth , double ratioHeight, final Bitmap bitmap){
+        com.readboy.bean.old.Point parentLeftTop = new com.readboy.bean.old.Point(children.getLeftTopX(),children.getLeftTopY());
+        List<ChildrenQuestion> childQuestion = children.getChildren();
+        for(int j = 1; j< childQuestion.size(); j++){
+            ChildrenQuestion realQuestion = childQuestion.get(j);
+            LogUtils.d("realQuestion == " + realQuestion.toString() + ",parentLT = "  + parentLeftTop.toString());
+            com.readboy.bean.old.Point realQuestionLeftTop = new com.readboy.bean.old.Point(realQuestion.getLeftTopX() + parentLeftTop.getX(),realQuestion.getLeftTopY() + parentLeftTop.getY());
+            com.readboy.bean.old.Point realQuestionRightBottom = new com.readboy.bean.old.Point(realQuestion.getRightBottomX() + parentLeftTop.getX(),realQuestion.getRightBottomY() + parentLeftTop.getY());
+            //计算答案坐标，封装到location
+            Location[] locations = new Location[realQuestion.getAnswer().size()];
+            for(int i = 0 ; i < locations.length ; i++){
+                Answer answer = realQuestion.getAnswer().get(i);
+                com.readboy.bean.old.Point answerPoint1 =  new com.readboy.bean.old.Point((int)(leftTop.x + (answer.getLeftTopX() + parentLeftTop.getX())*ratioWidth),(int)(leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
+                com.readboy.bean.old.Point answerPoint2 =  new com.readboy.bean.old.Point((int)(leftTop.x + (answer.getRightBottomX() + parentLeftTop.getX())*ratioWidth),(int)(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
+                locations[i] = new Location(answerPoint1,answerPoint2);
+            }
+            List<Point> pointScrop = new ArrayList<>();
+            int marginMore = 10;
+            pointScrop.add(new Point(Math.max(((leftTop.x  + realQuestionLeftTop.getX() *ratioWidth )- 2.2* marginMore),1) ,Math.max((leftTop.y + realQuestionLeftTop.getY()*ratioHeight)- 2.5*marginMore ,1)));
+            pointScrop.add(new Point(Math.min(((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth )  + 2.2* marginMore ),bitmap.getWidth()),Math.max((leftTop.y + realQuestionLeftTop.getY()*ratioHeight) - 2.5*marginMore,1)));
+            pointScrop.add(new Point(Math.max((leftTop.x  + realQuestionLeftTop.getX()*ratioWidth)  -2.2*marginMore,1),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight  + marginMore ,bitmap.getHeight())));
+            pointScrop.add(new Point(Math.min((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight   + marginMore ,bitmap.getHeight())));
+            Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
+            doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType());
+        }
+
+    }
+
+    private void dealListenQuestion(Children children, Point leftTop, double ratioWidth , double ratioHeight, final Bitmap bitmap){
+        try {
+            com.readboy.bean.old.Point parentLeftTop = new com.readboy.bean.old.Point(children.getLeftTopX(),children.getLeftTopY());
+            List<ChildrenQuestion> childQuestion = children.getChildren();
+            ChildrenQuestion realQuestion = childQuestion.get(1);
+            LogUtils.d("realQuestion == " + realQuestion.toString() + ",parentLT = "  + parentLeftTop.toString());
+            com.readboy.bean.old.Point realQuestionLeftTop = new com.readboy.bean.old.Point(realQuestion.getLeftTopX() + parentLeftTop.getX(),realQuestion.getLeftTopY() + parentLeftTop.getY());
+            com.readboy.bean.old.Point realQuestionRightBottom = new com.readboy.bean.old.Point(realQuestion.getRightBottomX() + parentLeftTop.getX(),realQuestion.getRightBottomY() + parentLeftTop.getY());
+            //计算答案坐标，封装到location
+            Location[] locations = new Location[realQuestion.getAnswer().size()];
+            for(int i = 0 ; i < locations.length ; i++){
+                Answer answer = realQuestion.getAnswer().get(i);
+                com.readboy.bean.old.Point answerPoint1 =  new com.readboy.bean.old.Point((int)(leftTop.x + (answer.getLeftTopX() + parentLeftTop.getX())*ratioWidth),(int)(leftTop.y + (answer.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
+                com.readboy.bean.old.Point answerPoint2 =  new com.readboy.bean.old.Point((int)(leftTop.x + (answer.getRightBottomX() + parentLeftTop.getX())*ratioWidth),(int)(leftTop.y + (answer.getRightBottomY() + parentLeftTop.getY())*ratioHeight));
+                locations[i] = new Location(answerPoint1,answerPoint2);
+            }
+
+            List<Point> pointScrop = new ArrayList<>();
+            int marginMore = 10;
+            pointScrop.add(new Point(Math.max(((leftTop.x  + realQuestionLeftTop.getX() *ratioWidth )- 2.2* marginMore),1) ,Math.max((leftTop.y + realQuestionLeftTop.getY()*ratioHeight)- 2.5*marginMore ,1)));
+            pointScrop.add(new Point(Math.min(((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth )  + 2.2* marginMore ),bitmap.getWidth()),Math.max((leftTop.y + realQuestionLeftTop.getY()*ratioHeight) - 2.5*marginMore,1)));
+            pointScrop.add(new Point(Math.max((leftTop.x  + realQuestionLeftTop.getX()*ratioWidth)  -2.2*marginMore,1),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight  + marginMore ,bitmap.getHeight())));
+            pointScrop.add(new Point(Math.min((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight   + marginMore ,bitmap.getHeight())));
+            final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
+            doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType());
+
+        }catch (Exception e){
+            LogUtils.e("dealListenQuestion error = " + e.getMessage());
+        }
+    }
+
+    public void addViewForWholeTest(double ratioWidth , double ratioHeight,Location[] locations) {
+        for(int j = 0 ; j< locations.length ; j++ ){
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
+            Location location =locations[j];
+            //获取中位点
+            // 30 是textSize的1.5倍换算过来的
+            double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/3 + location.getTop_left().getX();
+            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY() - 20;
+            TextView child = new TextView(this);
+            child.setTextSize(20);
+            String result = "占位符" + (j + 1);
+            child.setText(result);
+            LogUtils.d("midX  = " + midX  + ",midY === " + midY + ",location" + location.toString());
+
+
+            if(j % 2 == 0){
+                child.setTextColor(getResources().getColor(R.color.green));
+
+            }else {
+                child.setTextColor(getResources().getColor(R.color.red));
+            }
+            child.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+            params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight) ,0,0);
+            child.setLayoutParams(params);
+            // 调用一个参数的addView方法
+            llShow.addView(child,params);
+        }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
 
     @SuppressLint("NewApi")
     private void savePicture(Mat frame){
@@ -449,7 +627,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
 
 
-        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_d),Data.class);
+        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_b),Data.class);
         Block[] blocks = data.getBlock();
 
         //修改各个答案显示在照片里的坐标值
@@ -461,10 +639,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
             List<Point> pointScrop = new ArrayList<>();
             int marginMore = 8;
-            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX() *ratioWidth )-1.5* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight)- 2.7*marginMore ));
-            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth )  + 1.5* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight) - 2.7*marginMore));
-            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX()*ratioWidth)  - 1.5*marginMore,(leftTop.y + location.getRight_bottom().getY()*ratioHeight)  + marginMore ));
-            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth ) + 1.5* marginMore ,(leftTop.y + location.getRight_bottom().getY()*ratioHeight   + marginMore )));
+            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX() *ratioWidth )-2* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight)- 2.7*marginMore ));
+            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth )  + 2* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight) - 2.7*marginMore));
+            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX()*ratioWidth)  - 2*marginMore,(leftTop.y + location.getRight_bottom().getY()*ratioHeight)  + 2*marginMore ));
+            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth ) + 2* marginMore ,(leftTop.y + location.getRight_bottom().getY()*ratioHeight   + 2*marginMore )));
             Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
             String root = getExternalCacheDir().getAbsolutePath();
             String dirName = "erweima16";
@@ -477,13 +655,13 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             String path = "Image" + j + ".jpg";
             BitmapUtils.saveImageToGallery(stretch,MainActivity.this,j);
 
-            location.setTop_left(new com.readboy.bean.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
-            location.setRight_bottom(new com.readboy.bean.Point((int)(leftTop.x + location.getRight_bottom().getX()*ratioWidth),(int)(leftTop.y + location.getRight_bottom().getY()*ratioHeight)));
+            location.setTop_left(new com.readboy.bean.old.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
+            location.setRight_bottom(new com.readboy.bean.old.Point((int)(leftTop.x + location.getRight_bottom().getX()*ratioWidth),(int)(leftTop.y + location.getRight_bottom().getY()*ratioHeight)));
             LogUtils.d("Location111 == = " + (leftTop. x + location.getTop_left().getX()*ratioWidth) + " ,j =  = " + j + ",leftTop. y = " + (leftTop.y + location.getTop_left().getY()*ratioHeight) );
             LogUtils.d("Location222 == = " + (leftTop. x + location.getRight_bottom().getX()*ratioWidth ) + " ,j =  = " + j + ",leftTop. y = " + (leftTop.y + location.getRight_bottom().getY()*ratioHeight) );
         }
         llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
-        doNetRequest(bitmap);
+        //doNetRequest(bitmap);
 
         LogUtils.d("ratioWidth1111 = " + llWidth/width + " , ratioHeight1111 = " + llHeight/height + ",block size = " + blocks.length );
 
@@ -558,47 +736,95 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
-    private void doNetRequest(final Bitmap bitmap) {
-        LogUtils.d("doNetRequest null 111== bitmap");
-
+    private void doNetRequest(final Bitmap bitmap, final Location[] locations, final double ratioWidth , final double ratioHeight , final int type) {
         if (null == bitmap){
             LogUtils.d("doNetRequest null == bitmap");
             return;
         }
-        new Thread(new Runnable() {
+        Map<String, String> header = null;
+        try {
+            header = NetUtil.constructHeader("en", "true");
+
+            //Bitmap转换成byte[]
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] imageByteArray = baos.toByteArray();
+            //byte[] imageByteArray = FileUtil.read2ByteArray(path,1);
+            String imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
+            String bodyParam = "image=" + imageBase64;
+            final String result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam);
+            LogUtils.d("result == " + result);
+            switch (type){
+                case 10001:
+                    dealChoose(result,locations[0],ratioWidth,ratioHeight);
+                    break;
+                case 10006:
+                    break;
+                case 10023:
+                    dealListen(result,locations,ratioWidth,ratioHeight);
+                    break;
+            }
+        } catch (Exception e) {
+            LogUtils.d("error = " + e);
+        }
+        /*new Thread(new Runnable() {
             @Override
             public void run() {
-                Map<String, String> header = null;
-                try {
-                    header = NetUtil.constructHeader("en", "true");
 
-                    //Bitmap转换成byte[]
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                    byte[] imageByteArray = baos.toByteArray();
-                    //byte[] imageByteArray = FileUtil.read2ByteArray(path,1);
-                    String imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
-                    String bodyParam = "image=" + imageBase64;
-                    LogUtils.d("result == " + bodyParam.length());
-                    final String result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam);
-                    Log.e("TAG", "result == " + result);
-                    dealListen(result);
-
-                } catch (Exception e) {
-                    LogUtils.d("error = " + e);
-                }
             }
         }).start();
-
+*/
 
 
     }
 
-    private void dealListen(String result){
+    private void dealChoose(String result, final Location locations, final double ratioWidth , final double ratioHeight){
         if (!TextUtils.isEmpty(result)) {
             BaseResponse baseResponse = GsonUtil.gsonToBean(result, BaseResponse.class);
             if (baseResponse != null) {
-                Log.e("TAG", "result == " + baseResponse.toString());
+                String answerResult = "";
+                Line[] lines = baseResponse.getData().getBlock()[0].getLine();
+                if (null != lines && lines.length > 0) {
+                    List<Line> list = Arrays.asList(lines);
+                    List<Line> lineList = new ArrayList(list);
+                    Collections.sort(lineList);
+                    for (Line line : lineList) {
+                        LogUtils.d("dealListen line = " + line.toString());
+                        Word[] words = line.getWord();
+                        for (Word word : words) {
+                            String content = word.getContent();
+                            if(content.contains("(") || content.contains(")") || content.contains("（") || content.contains("）")){
+                                content = content.replaceAll("（","(");
+                                content = content.replaceAll("）",")");
+                                String resultLast = DeviceUtil.getResultFromContent(content);
+                                if(!TextUtils.isEmpty(resultLast) && resultLast.length() == 1 && PhotoUtil.checkEnglish(resultLast)){
+                                    answerResult = resultLast;
+                                    final String finalAnswerResult = answerResult;
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            //addView();
+                                            LogUtils.d("dealChoose resultLast == " + finalAnswerResult);
+                                            addChooseAnswer(ratioWidth,ratioHeight,locations, finalAnswerResult);
+
+                                        }
+                                    });
+                                    LogUtils.d("dealChoose resultLast == " + resultLast + "ThreadId = " + Thread.currentThread().getId() + "Location = " + locations.toString());
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    private void dealListen(String result, final Location[] locations, final double ratioWidth , final double ratioHeight){
+        if (!TextUtils.isEmpty(result)) {
+            BaseResponse baseResponse = GsonUtil.gsonToBean(result, BaseResponse.class);
+            if (baseResponse != null) {
                 Line[] lines = baseResponse.getData().getBlock()[0].getLine();
                 if (null != lines && lines.length > 0) {
                     List<Line> list = Arrays.asList(lines);
@@ -606,11 +832,16 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     Collections.sort(lineList);
 
                     for (Line line : lineList) {
-                        LogUtils.d("dealListen line = " + line.toString());
                         Word[] words = line.getWord();
                         for (Word word : words) {
-                            if(!PhotoUtil.isContainChinese(word.getContent()) && !PhotoUtil.isContainsNum(word.getContent()) && !PhotoUtil.check(word.getContent())){
-                                results.add(word.getContent());
+                            String content = word.getContent();
+                            String filter1 = content.replaceAll("\\d+","");
+                            String filter2 = filter1.replaceAll("[\\p{P}‘’“”]","");
+
+                            if(!TextUtils.isEmpty(filter2) && !PhotoUtil.isContainChinese(filter2)){
+                                results.add(filter2);
+                                LogUtils.d("dealListen line = " + filter2);
+
                             }
                         }
                     }
@@ -619,11 +850,68 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     @Override
                     public void run() {
                         //addView();
+                        addListenAnswer(ratioWidth,ratioHeight,locations);
 
                     }
                 });
             }
         }
+    }
+
+    public void addChooseAnswer(double ratioWidth , double ratioHeight,Location location,String result) {
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
+        //获取中位点
+        // 30 是textSize的1.5倍换算过来的
+        double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
+        double midY =  location.getTop_left().getY() - 30 ;
+        TextView child = new TextView(this);
+        child.setTextSize(20);
+        child.setText(result);
+        LogUtils.d("midX  = " + midX  + ",midY === " + midY + ",location" + location.toString());
+        child.setTextColor(getResources().getColor(R.color.green));
+        child.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+        params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight)  ,0,0);
+        child.setLayoutParams(params);
+        // 调用一个参数的addView方法
+        llShow.addView(child,params);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    public void addListenAnswer(double ratioWidth , double ratioHeight,Location[] locations) {
+        if (results == null || results.size() == 0){
+            LogUtils.d("addListenAnswer is null");
+            return;
+        }
+
+        int size = Math.min(results.size(),locations.length);
+        for(int j = 0 ; j< size ; j++ ){
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
+            Location location = locations[j];
+            //获取中位点
+            // 30 是textSize的1.5倍换算过来的
+            double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
+            double midY = 1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 + location.getTop_left().getY() + 20 ;
+            TextView child = new TextView(this);
+            child.setTextSize(20);
+            String result = results.get(j);
+            child.setText(result);
+            LogUtils.d("midX  = " + midX  + ",midY === " + midY + ",location" + location.toString());
+
+            if(j % 2 == 0){
+                child.setTextColor(getResources().getColor(R.color.green));
+
+            }else {
+                child.setTextColor(getResources().getColor(R.color.red));
+            }
+            child.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+            params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight)  ,0,0);
+            child.setLayoutParams(params);
+            // 调用一个参数的addView方法
+            llShow.addView(child,params);
+        }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 }
 

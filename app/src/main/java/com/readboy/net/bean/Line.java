@@ -51,10 +51,10 @@ public class Line  implements Comparable<Line>{
         Line line1 = this;
         int gapY = line.getLocation().getTop_left().getY() - line1.getLocation().getTop_left().getY();
         int gapX = line.getLocation().getTop_left().getX() - line1.getLocation().getTop_left().getX();
-        if( gapY > 60 ){
+        if( gapY > 25 ){
             LogUtils.d("line = " + line.toString() + ",line2222 = " + line1.toString());
             return -1;
-        }else if(gapY > -60 && gapX > 0) {
+        }else if(gapY > -30 && gapX > 0) {
             LogUtils.d("line = " + line.toString() + ",line33333 = " + line1.toString());
             return -1;
         }

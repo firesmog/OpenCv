@@ -9,6 +9,9 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.readboy.log.LogUtils;
 
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
@@ -39,6 +42,11 @@ public class BitmapUtils {
                 Math.max((int)bitmapBottomRight.x, (int)bitmapTopRight.x),
                 Math.max((int)bitmapBottomRight.y, (int)bitmapBottomLeft.y));
 
+        /*if(cropRect.left <= 0 ||  cropRect.top <= 0 || cropRect.width() <=0 || cropRect.height() <= 0 ){
+            LogUtils.d("cropBitmap == is error");
+            return bitmap;
+
+        }*/
         Bitmap cut = Bitmap.createBitmap(
                 bitmap,
                 cropRect.left,

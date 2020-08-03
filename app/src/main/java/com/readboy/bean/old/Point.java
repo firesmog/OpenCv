@@ -1,4 +1,4 @@
-package com.readboy.bean;
+package com.readboy.bean.old;
 
 public class Point {
     private int x;
