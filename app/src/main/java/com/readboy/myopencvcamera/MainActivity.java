@@ -15,6 +15,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -289,10 +290,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Mat s = new Mat();
 
         //高斯模糊效果较好，size里的参数只能为奇数
-       //Imgproc.GaussianBlur(gray,b, new Size(5,5),0);
-       Imgproc.Laplacian(gray,s,-1,3);//Laplace边缘提取
+       Imgproc.GaussianBlur(gray,b, new Size(1,1),0);
+       //Imgproc.Laplacian(gray,s,-1,3);//Laplace边缘提取
         Mat t = new Mat();
-        Imgproc.threshold(s, t, 125, 255, THRESH_BINARY);
+        Imgproc.threshold(b, t, 125, 255, THRESH_BINARY);
         return t;
     }
 
@@ -519,6 +520,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             pointScrop.add(new Point(Math.max((leftTop.x  + realQuestionLeftTop.getX()*ratioWidth)  -2.2*marginMore,1),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight  + marginMore ,bitmap.getHeight())));
             pointScrop.add(new Point(Math.min((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight   + marginMore ,bitmap.getHeight())));
             Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
+            BitmapUtils.saveImageToGallery(stretch,this,9527 +  j);
             doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType());
         }
 
@@ -548,6 +550,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             pointScrop.add(new Point(Math.max((leftTop.x  + realQuestionLeftTop.getX()*ratioWidth)  -2.2*marginMore,1),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight  + marginMore ,bitmap.getHeight())));
             pointScrop.add(new Point(Math.min((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight   + marginMore ,bitmap.getHeight())));
             final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
+            BitmapUtils.saveImageToGallery(stretch,this,9527);
             doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType());
 
         }catch (Exception e){
