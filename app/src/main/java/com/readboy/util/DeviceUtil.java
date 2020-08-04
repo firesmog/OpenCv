@@ -34,9 +34,9 @@ public class DeviceUtil {
     }
 
     public static String getResultFromContent(String gSQL){
-        String quStr=gSQL.substring(gSQL.indexOf("(")+1,gSQL.indexOf(")"));
+        String quStr=gSQL.substring(gSQL.indexOf("(")+1,gSQL.indexOf("(")+2);
         if(TextUtils.isEmpty(quStr)){
-            return null;
+            quStr = gSQL.substring(gSQL.indexOf(")")-1,gSQL.indexOf(")"));
         }
         return quStr;
     }
