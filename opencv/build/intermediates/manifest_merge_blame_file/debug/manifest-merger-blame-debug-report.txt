@@ -5,10 +5,27 @@
 5    android:versionName="3.4.10" >
 6
 7    <uses-sdk
-7-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:7:5-47
+7-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:14:5-47
 8        android:minSdkVersion="14"
-8-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:7:5-47
+8-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:14:5-47
 9        android:targetSdkVersion="28" />
-9-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:7:15-44
+9-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:14:15-44
 10
-11</manifest>
+11    <uses-permission android:name="android.permission.CAMERA" />
+11-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:6:5-64
+11-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:6:22-62
+12
+13    <uses-feature android:name="android.hardware.camera" />
+13-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:8:5-59
+13-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:8:19-57
+14    <uses-feature android:name="android.hardware.camera.autofocus" />
+14-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:9:5-69
+14-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:9:19-67
+15    <uses-feature android:name="android.hardware.camera.front" />
+15-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:10:5-65
+15-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:10:19-63
+16    <uses-feature android:name="android.hardware.camera.front.autofocus" />
+16-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:11:5-75
+16-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:11:19-73
+17
+18</manifest>

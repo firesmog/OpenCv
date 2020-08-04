@@ -3,6 +3,7 @@ package com.readboy.myopencvcamera;
 import org.apache.commons.codec.binary.Base64;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -21,13 +22,16 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -77,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private static final String TAG = "TAG_CameraActivity";
     private int WIDTH_BLOCK = 40;
     private int HEIGHT_BLOCK = 40;
-    private CameraBridgeViewBase mOpenCvCameraView;
+    private JavaCameraView mOpenCvCameraView;
     private boolean mIsJavaCamera = true;
     private MenuItem mItemSwitchCamera = null;
     private static final int VIEW_MODE_RGBA = 0;
@@ -141,7 +145,13 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.javaCameraView);
+        mOpenCvCameraView = (JavaCameraView) findViewById(R.id.javaCameraView);
+        mOpenCvCameraView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mOpenCvCameraView.setAutoFocus();
+            }
+        });
         llShow = (RelativeLayout) findViewById(R.id.iv_show);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
@@ -152,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
 
     }
+
 
 
 
@@ -217,6 +228,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 break;
             case R.id.clickItem:
                 //showDifferentColorImage(mRgba);
+                mOpenCvCameraView.cancelAutoFocus();
                 getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
                 //showAutoCropPicture(mRgba);
@@ -353,7 +365,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             Imgproc.approxPolyDP(curve, approxCurve, epsilon,true );
             LogUtils.d("findContours area max333333  = " + approxCurve.total() );
 
-            if(approxCurve.total() < 4 && approxCurve.total() > 7){
+            if(approxCurve.total() !=4){
                 continue;
             }
 

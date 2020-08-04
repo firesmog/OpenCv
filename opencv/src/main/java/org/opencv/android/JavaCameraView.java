@@ -27,7 +27,7 @@ import org.opencv.imgproc.Imgproc;
  * When frame is delivered via callback from Camera - it processed via OpenCV to be
  * converted to RGBA32 and then passed to the external callback for modifications if required.
  */
-public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallback {
+public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallback , Camera.AutoFocusCallback {
 
     private static final int MAGIC_TEXTURE_ID = 10;
     private static final String TAG = "JavaCameraView";
@@ -42,6 +42,18 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
     protected JavaCameraFrame[] mCameraFrame;
     private SurfaceTexture mSurfaceTexture;
     private int mPreviewFormat = ImageFormat.NV21;
+    private Camera.Parameters parameters;
+
+    @Override
+    public void onAutoFocus(boolean b, Camera camera) {
+            if (b) {
+                camera.cancelAutoFocus();// 只有加上了这一句，才会自动对焦
+                doAutoFocus();
+            }
+        }
+
+
+
 
     public static class JavaCameraSizeAccessor implements ListItemAccessor {
 
@@ -56,6 +68,40 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
             Camera.Size size = (Camera.Size) obj;
             return size.height;
         }
+    }
+
+    public void setAutoFocus(){
+        mCamera.autoFocus(this);
+        Log.d(TAG,"setAutoFocus success --");
+    }
+
+    private void doAutoFocus() {
+        parameters = mCamera.getParameters();
+        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+        mCamera.setParameters(parameters);
+        mCamera.autoFocus(new Camera.AutoFocusCallback() {
+            @Override
+            public void onAutoFocus(boolean success, Camera camera) {
+                if (success) {
+                    camera.cancelAutoFocus();// 只有加上了这一句，才会自动对焦。
+                    if (!Build.MODEL.equals("KORIDY H30")) {
+                        parameters = camera.getParameters();
+                        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);// 1连续对焦
+                        camera.setParameters(parameters);
+                    }else{
+                        parameters = camera.getParameters();
+                        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                        camera.setParameters(parameters);
+                    }
+                }
+            }
+        });
+    }
+
+    public void cancelAutoFocus(){
+        mCamera.cancelAutoFocus();
+        Log.d(TAG,"cancelAutoFocus success --");
+
     }
 
     public JavaCameraView(Context context, int cameraId) {
