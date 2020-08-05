@@ -448,8 +448,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Utils.matToBitmap(frameData, bitmap);
         //bitmap = PhotoUtil.binarization(bitmap);
 
-        BitmapUtils.saveImageToGallery(bitmap,this,303);
-        Mat src = Imgcodecs.imread(BitmapUtils.getFilePath(this,303));
+        Imgproc.cvtColor(frame,frame,Imgproc. COLOR_RGBA2RGB);
+        Mat src = GrayUtils.grayColByAdapThreshold(frame);
+
         src = GrayUtils.grayColByAdapThreshold(src);
 
         //opencv自带的二值化
@@ -474,20 +475,14 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     @SuppressLint("NewApi")
     private void savePictureAccordExam(Mat frame){
         Mat frameData = processImage(frame);
-        List<Mat> mats = new ArrayList<>();
         //多通道分离出单通道
         final Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(frameData, bitmap);
         BitmapUtils.saveImageToGallery(bitmap,this,303);
-        String name = System.currentTimeMillis() + "output_image.jpg";
-        String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
-        String fileName = pathResult + ".jpg";
-        Imgcodecs.imwrite(fileName, frameData);
         Mat edge=new Mat();
         Imgproc.Canny(frameData,edge,90,270,5,true);
         Utils.matToBitmap(edge, bitmap);
 
-        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
         List<Point> points = getCornersByContour(edge);
         for (Point point : points) {
             LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
@@ -496,7 +491,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Point righttop=points.get(1);
         Point leftbottom=points.get(2);
         Point rightbottom=points.get(3);
-        Utils.matToBitmap(mRgbaOrigin, bitmap);
+        Utils.matToBitmap(frame, bitmap);
 
 
         //add by lzy for class exam demo
