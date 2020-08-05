@@ -59,8 +59,11 @@ import com.readboy.net.NetUtil;
 import com.readboy.net.bean.BaseResponse;
 import com.readboy.net.bean.Line;
 import com.readboy.net.bean.Word;
+import com.readboy.util.BinaryUtils;
 import com.readboy.util.BitmapUtils;
 import com.readboy.util.DeviceUtil;
+import com.readboy.util.GeneralUtils;
+import com.readboy.util.GrayUtils;
 import com.readboy.util.GsonUtil;
 import com.readboy.util.PhotoUtil;
 
@@ -127,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private int llHeight;
     private ActionBar actionBar;
     private Mat mRgbaOrigin;
+    private double lastAreaHere;
 
     /**
      * 第一次创建时调用
@@ -231,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 //showDifferentColorImage(mRgba);
                 mOpenCvCameraView.cancelAutoFocus();
                 getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-
+               //showAdapterAutoCropPicture(mRgba);
                 //showAutoCropPicture(mRgba);
                 //savePicture(mRgba);
                 savePictureAccordExam(mRgba);
@@ -289,12 +293,26 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Mat b = new Mat();
         Mat s = new Mat();
 
-        //高斯模糊效果较好，size里的参数只能为奇数
+        /*Bitmap bitmap = Bitmap.createBitmap(gray.width(), gray.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(gray, bitmap);
+        bitmap = PhotoUtil.binarization(bitmap);
+        Utils.bitmapToMat(bitmap,b);
+        return  b;*/
+
+
+        Imgproc.cvtColor(gray,gray,Imgproc. COLOR_RGBA2RGB);
+        Mat src = GrayUtils.grayColByAdapThreshold(gray);
+
+        //opencv自带的二值化
+        src = BinaryUtils.binaryNative(src);
+        return src;
+
+       /* //高斯模糊效果较好，size里的参数只能为奇数
        Imgproc.GaussianBlur(gray,b, new Size(1,1),0);
        //Imgproc.Laplacian(gray,s,-1,3);//Laplace边缘提取
         Mat t = new Mat();
         Imgproc.threshold(b, t, 125, 255, THRESH_BINARY);
-        return t;
+        return t;*/
     }
 
 
@@ -304,12 +322,20 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Imgproc.findContours(imgsource,contours,new Mat(),Imgproc.RETR_EXTERNAL,Imgproc.CHAIN_APPROX_SIMPLE);
         LogUtils.d("findContours size = " + contours.size());
         double maxArea= 20;
-        MatOfPoint temp_contour=contours.get(0);//假设最大的轮廓在index=0处
+        MatOfPoint temp_contour= contours.get(0);//假设最大的轮廓在index=0处
         MatOfPoint2f approxCurve=new MatOfPoint2f();
         for (int idx=0;idx<contours.size();idx++){
             temp_contour=contours.get(idx);
             double contourarea=Imgproc.contourArea(temp_contour);
+            if(  contourarea < 6000){
+                continue;
+            }
             LogUtils.d("findContours area = " + contourarea);
+
+           /* if(Math.abs(contourarea - lastAreaHere)  < 10){
+                continue;
+            }
+            lastAreaHere = contourarea;*/
 
             //当前轮廓面积比最大的区域面积大就检测是否为四边形
             if (contourarea > maxArea){
@@ -317,7 +343,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 MatOfPoint2f new_mat=new MatOfPoint2f(temp_contour.toArray());
                 MatOfPoint2f approxCurve_temp=new MatOfPoint2f();
                 //对图像轮廓点进行多边形拟合
-                Imgproc.approxPolyDP(new_mat,approxCurve_temp,15,true);
+                Imgproc.approxPolyDP(new_mat,approxCurve_temp,0.01 * Imgproc.arcLength(new_mat, true),true);
+                LogUtils.d("findContours22222 area = " + approxCurve_temp.total()  +", length = " +  0.01 * Imgproc.arcLength(new_mat, true));
+
                 if (approxCurve_temp.total() == 4 ){
                     maxArea=contourarea;
                     approxCurve=approxCurve_temp;
@@ -413,6 +441,35 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     }
 
 
+    //自动按边框裁剪后拉伸（test pass）
+    private void showAdapterAutoCropPicture(Mat frame){
+        Mat frameData = frame;
+        Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(frameData, bitmap);
+        //bitmap = PhotoUtil.binarization(bitmap);
+
+        BitmapUtils.saveImageToGallery(bitmap,this,303);
+        Mat src = Imgcodecs.imread(BitmapUtils.getFilePath(this,303));
+        src = GrayUtils.grayColByAdapThreshold(src);
+
+        //opencv自带的二值化
+        src = BinaryUtils.binaryNative(src);
+
+        //局部自适应二值化
+        //src = BinaryUtils.partBinaryzation(src);
+
+        //全局自适应二值化
+            //src = BinaryUtils.binaryzation(src);
+        BitmapUtils.saveImageToGallery(bitmap,this,303);
+        GeneralUtils.saveImg(src , BitmapUtils.getFilePath(this,304));
+        Utils.matToBitmap(src, bitmap);
+        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
+
+        //addView(ratioWidth,ratioHeight);
+
+    }
+
+
 
     @SuppressLint("NewApi")
     private void savePictureAccordExam(Mat frame){
@@ -421,13 +478,16 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         //多通道分离出单通道
         final Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(frameData, bitmap);
+        BitmapUtils.saveImageToGallery(bitmap,this,303);
         String name = System.currentTimeMillis() + "output_image.jpg";
         String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
         String fileName = pathResult + ".jpg";
         Imgcodecs.imwrite(fileName, frameData);
-        //ivShow.setImageBitmap(bitmap);
         Mat edge=new Mat();
         Imgproc.Canny(frameData,edge,90,270,5,true);
+        Utils.matToBitmap(edge, bitmap);
+
+        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
         List<Point> points = getCornersByContour(edge);
         for (Point point : points) {
             LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());

@@ -165,6 +165,21 @@ public class BitmapUtils {
         return source;
     }
 
+    public static String getFilePath(Context context,int i){
+        String root = context.getExternalCacheDir().getAbsolutePath();
+        String dirName = "erweima16";
+        File appDir = new File(root , dirName);
+        if (!appDir.exists()) {
+            appDir.mkdirs();
+        }
+
+        //文件名为时间
+        String fileName = "Image" + i + ".jpg";
+
+        //获取文件
+        File file = new File(appDir, fileName);
+        return file.getPath();
+    }
 
     public static int saveImageToGallery(Bitmap bmp, Context context,int i) {
         //生成路径
