@@ -290,8 +290,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
     private Mat processImage( Mat gray ) {
-        Mat b = new Mat();
-        Mat s = new Mat();
+
 
         /*Bitmap bitmap = Bitmap.createBitmap(gray.width(), gray.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(gray, bitmap);
@@ -303,12 +302,15 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Imgproc.cvtColor(gray,gray,Imgproc. COLOR_RGBA2RGB);
         Mat src = GrayUtils.grayColByAdapThreshold(gray);
 
+
         //opencv自带的二值化
         src = BinaryUtils.binaryNative(src);
         return src;
 
        /* //高斯模糊效果较好，size里的参数只能为奇数
-       Imgproc.GaussianBlur(gray,b, new Size(1,1),0);
+        Mat b = new Mat();
+        Mat s = new Mat();
+        Imgproc.GaussianBlur(gray,b, new Size(1,1),0);
        //Imgproc.Laplacian(gray,s,-1,3);//Laplace边缘提取
         Mat t = new Mat();
         Imgproc.threshold(b, t, 125, 255, THRESH_BINARY);
@@ -511,7 +513,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         int examHeight = data.getHeight();
         int examWidth = data.getWidth();
         double gapWidth = width2 - width;
+        //final double ratioHeight  = height/examHeight ;
         final double ratioHeight  = height/examHeight ;
+        //final double ratioWidth = width/examWidth;
         final double ratioWidth = width/examWidth;
         LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight   );
         LogUtils.d("ratioWidth leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth  );

@@ -1,5 +1,7 @@
 package com.readboy.util;
 
+import com.readboy.log.LogUtils;
+
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
@@ -251,7 +253,8 @@ public class GrayUtils {
         int width = GeneralUtils.getImgWidth(src), height = GeneralUtils.getImgHeight(src);
         int value;
 
-        int threshold = getAdapThreshold(src);
+        int threshold = 125;
+        LogUtils.d("threshold result = " + threshold);
         for (j = 0; j < height; j++) {
             for (i = 0; i < width; i++) {
                 value = GeneralUtils.getPixel(src, j, i);
