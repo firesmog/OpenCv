@@ -18,6 +18,8 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
+import org.opencv.utils.Converters;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -65,6 +67,7 @@ import com.readboy.util.DeviceUtil;
 import com.readboy.util.GeneralUtils;
 import com.readboy.util.GrayUtils;
 import com.readboy.util.GsonUtil;
+import com.readboy.util.HandleImgUtils;
 import com.readboy.util.PhotoUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -235,10 +238,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 //showDifferentColorImage(mRgba);
                 mOpenCvCameraView.cancelAutoFocus();
                 getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-               //showAdapterAutoCropPicture(mRgba);
+               showAdapterAutoCropPicture(mRgba);
                 //showAutoCropPicture(mRgba);
                 //savePicture(mRgba);
-                savePictureAccordExam(mRgba);
+                //savePictureAccordExam(mRgba);
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
@@ -301,8 +304,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         Imgproc.cvtColor(gray,gray,Imgproc. COLOR_RGBA2RGB);
         Mat src = GrayUtils.grayColByAdapThreshold(gray);
-
-
         //opencv自带的二值化
         src = BinaryUtils.binaryNative(src);
         return src;
@@ -437,7 +438,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         llShow.setBackground(new BitmapDrawable(getResources(), stretch));
         double ratioHeight  = llHeight*1.0d / 800;
         double ratioWidth = llWidth *1.0d/ 600;
-        LogUtils.d("ratioHeight = " + ratioHeight + " , ratioWidth = " + ratioWidth );
+        LogUtils.d("stretch ratioHeight = " + stretch.getHeight() + " , ratioWidth = " + stretch.getWidth() );
         //addView(ratioWidth,ratioHeight);
 
     }
@@ -445,31 +446,40 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     //自动按边框裁剪后拉伸（test pass）
     private void showAdapterAutoCropPicture(Mat frame){
-        Mat frameData = frame;
+        Mat frameData = processImage(frame);
         Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(frameData, bitmap);
-        //bitmap = PhotoUtil.binarization(bitmap);
+        Mat edge=new Mat();
+        Imgproc.Canny(frameData,edge,90,270,5,true);
+        Utils.matToBitmap(frame, bitmap);
+        List<Point> points = getCornersByContour(edge);
+        for (Point point : points) {
+            LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
+        }
 
-        Imgproc.cvtColor(frame,frame,Imgproc. COLOR_RGBA2RGB);
-        Mat src = GrayUtils.grayColByAdapThreshold(frame);
+        Mat srcPoints = Converters.vector_Point_to_Mat(points, CvType.CV_32F);
+        final Point leftTop = points.get(0);
+        Point righttop=points.get(1);
+        Point leftbottom=points.get(2);
+        Point rightbottom=points.get(3);
 
-        src = GrayUtils.grayColByAdapThreshold(src);
+        List<Point> dst = new ArrayList<>();
+        double MinX =  Math.min(leftTop.x, leftbottom.x);
+        double MaxX =  Math.max(righttop.x, rightbottom.x);
+        double MinY =  Math.min(leftTop.y, righttop.y);
+        double MaxY =  Math.max(leftbottom.y, rightbottom.y);
+        dst.add(new Point(MinX,MinY));
+        dst.add(new Point(MaxX,MinY));
+        dst.add(new Point(MinX,MaxY));
+        dst.add(new Point(MaxX,MaxY));
+        Mat dstPoints = Converters.vector_Point_to_Mat(dst, CvType.CV_32F);
+        Mat perspectiveMat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
+        Mat result = new Mat();
+        Imgproc.warpPerspective(frame, result, perspectiveMat, frame.size());
+        Utils.matToBitmap(result,bitmap);
+        Bitmap stretch = BitmapUtils.cropBitmap(dst,bitmap);
 
-        //opencv自带的二值化
-        src = BinaryUtils.binaryNative(src);
-
-        //局部自适应二值化
-        //src = BinaryUtils.partBinaryzation(src);
-
-        //全局自适应二值化
-            //src = BinaryUtils.binaryzation(src);
-        BitmapUtils.saveImageToGallery(bitmap,this,303);
-        GeneralUtils.saveImg(src , BitmapUtils.getFilePath(this,304));
-        Utils.matToBitmap(src, bitmap);
-        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
-
-        //addView(ratioWidth,ratioHeight);
-
+        llShow.setBackground(new BitmapDrawable(getResources(),stretch));
     }
 
 
