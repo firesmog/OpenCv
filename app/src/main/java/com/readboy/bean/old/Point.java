@@ -5,7 +5,7 @@ public class Point {
     private int y;
 
 
-    public Point() {
+    public Point(double x) {
     }
 
     public Point(int x, int y) {

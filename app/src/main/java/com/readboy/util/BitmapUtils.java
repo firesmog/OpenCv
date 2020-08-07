@@ -55,11 +55,7 @@ public class BitmapUtils {
                 cropRect.height()
         );
 
-        Log.e("stk", "bitmapPoints="
-                + bitmapTopLeft.toString() + " "
-                + bitmapTopRight.toString() + " "
-                + bitmapBottomRight.toString() + " "
-                + bitmapBottomLeft.toString() + " ");
+
 
         android.graphics.Point cutTopLeft = new android.graphics.Point();
         android.graphics.Point cutTopRight = new android.graphics.Point();
@@ -78,12 +74,7 @@ public class BitmapUtils {
         cutBottomRight.x = (int)(bitmapTopRight.x > bitmapBottomRight.x ? cropRect.width() - Math.abs(bitmapBottomRight.x - bitmapTopRight.x) : cropRect.width());
         cutBottomRight.y = (int)(bitmapBottomLeft.y > bitmapBottomRight.y ? cropRect.height() - Math.abs(bitmapBottomRight.y - bitmapBottomLeft.y) : cropRect.height());
 
-        Log.e("stk", cut.getWidth() + "x" + cut.getHeight());
-        Log.e("stk", "cutPoints="
-                + cutTopLeft.toString() + " "
-                + cutTopRight.toString() + " "
-                + cutBottomRight.toString() + " "
-                + cutBottomLeft.toString() + " ");
+
 
 
         float width = cut.getWidth();
@@ -97,7 +88,6 @@ public class BitmapUtils {
         Bitmap stretch = Bitmap.createBitmap(cut.getWidth(), cut.getHeight(), Bitmap.Config.ARGB_8888);
 
         Canvas stretchCanvas = new Canvas(stretch);
-//            stretchCanvas.drawBitmap(cut, matrix, null);
         stretchCanvas.concat(matrix);
         stretchCanvas.drawBitmapMesh(cut, WIDTH_BLOCK, HEIGHT_BLOCK, generateVertices(cut.getWidth(), cut.getHeight()), 0, null, 0, null);
         return stretch;
