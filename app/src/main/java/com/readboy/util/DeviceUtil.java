@@ -15,7 +15,7 @@ import io.netty.util.internal.StringUtil;
 
 public class DeviceUtil {
     public static ExamBean getExamData(Context context){
-        String question = context.getResources().getString(R.string.json_new_data_d);
+        String question = context.getResources().getString(R.string.json_new_data_c);
         question = replaceBlank(question);
         question = question.replace("\\", "");
         question = question.replace("\n", "");

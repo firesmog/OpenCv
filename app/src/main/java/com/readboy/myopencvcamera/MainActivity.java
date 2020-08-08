@@ -25,8 +25,10 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -454,7 +456,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Mat dstPoints = Converters.vector_Point_to_Mat(dst, CvType.CV_32F);
         Mat perspectiveMat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
         Mat result = new Mat();
-        Imgproc.warpPerspective(frame, result, perspectiveMat, frame.size());
+        Imgproc.warpPerspective(frame, result, perspectiveMat, frame.size(),Imgproc.INTER_LANCZOS4 );
         Utils.matToBitmap(result,bitmap);
         RectangleInfo info = new RectangleInfo();
         info.setBitmap(bitmap);
@@ -521,6 +523,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         List<Children> bigQuestion = data.getChildren();
         llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
 
+
         for (final Children children : bigQuestion) {
             switch (children.getType()){
                 case 10001:
@@ -576,7 +579,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore ,bitmap.getHeight())));
                 pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore,bitmap.getHeight())));
                 final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
-                BitmapUtils.saveImageToGallery(stretch,this,9530 +  i + 10*j);
                new Thread(new Runnable() {
                    @Override
                    public void run() {
@@ -629,8 +631,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             Location[] locations = new Location[realQuestion.getAnswer().size()];
             for(int i = 0 ; i < locations.length ; i++){
                 Answer answer = realQuestion.getAnswer().get(i);
-                com.readboy.bean.old.Point answerPoint1 =  new com.readboy.bean.old.Point((int)(leftTop.x + (answer.getLeftTopX() + parentLeftTop.getX())*ratioWidth),(int)(leftTop.y + (answer.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
-                com.readboy.bean.old.Point answerPoint2 =  new com.readboy.bean.old.Point((int)(leftTop.x + (answer.getRightBottomX() + parentLeftTop.getX())*ratioWidth),(int)(leftTop.y + (answer.getRightBottomY() + parentLeftTop.getY())*ratioHeight));
+                com.readboy.bean.old.Point answerPoint1 =  new com.readboy.bean.old.Point((int)(leftTop.x + (answer.getLeftTopX() + parentLeftTop.getX())*ratioWidth),(int)(leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
+                com.readboy.bean.old.Point answerPoint2 =  new com.readboy.bean.old.Point((int)(leftTop.x + (answer.getRightBottomX() + parentLeftTop.getX())*ratioWidth),(int)(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
                 locations[i] = new Location(answerPoint1,answerPoint2);
             }
 
@@ -641,7 +643,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             pointScrop.add(new Point(Math.max((leftTop.x  + realQuestionLeftTop.getX()*ratioWidth)  -2.2*marginMore,1),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight  + marginMore ,bitmap.getHeight())));
             pointScrop.add(new Point(Math.min((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight   + marginMore ,bitmap.getHeight())));
             final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
-            BitmapUtils.saveImageToGallery(stretch,this,9527);
             doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType(),null);
 
         }catch (Exception e){
@@ -1003,7 +1004,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         //获取中位点
         // 30 是textSize的1.5倍换算过来的
         double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
-        double midY =  location.getTop_left().getY() - 35 ;
+        double midY =  location.getTop_left().getY() - 30 ;
         TextView child = new TextView(this);
         child.setTextSize(20);
         child.setText(result);
@@ -1013,26 +1014,44 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         child.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
         params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight)  ,0,0);
         child.setLayoutParams(params);
-        // 调用一个参数的addView方法
+
+        Drawable drawable = llShow.getBackground();
+        Bitmap bitmap = getRectangleBitmap(drawable,location);
+        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
         llShow.addView(child,params);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
-    private void drawRectangleCorrect(){
-        Paint mPaint = new Paint();
-        //设置画笔颜色
-        mPaint.setColor(Color.BLACK);
-        //STROKE                //描边
-        //FILL                  //填充
-        //FILL_AND_STROKE       //描边加填充
-        //设置画笔模式
-        mPaint.setStyle(Paint.Style.FILL);
-        //设置画笔宽度为30px
-        mPaint.setStrokeWidth(30f);
+
+    public  Bitmap drawableToBitmap(Drawable drawable) {
+        Bitmap bitmap = Bitmap.createBitmap( drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(),
+                drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        drawable.draw(canvas);
+        return bitmap;
+    }
+
+
+    private Bitmap getRectangleBitmap(Drawable drawable,Location location){
+        Bitmap tempBitmap = drawableToBitmap(drawable);
+        Canvas canvas = new Canvas(tempBitmap);
+
+        //图像上画矩形
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);//不填充
+        paint.setStrokeWidth(3);  //线的宽度
+        canvas.drawRect(location.getTop_left().getX(), location.getTop_left().getY(), location.getRight_bottom().getX(), location.getRight_bottom().getY(), paint);
+        return tempBitmap;
 
     }
 
     public void addFillInAnswer(double ratioWidth , double ratioHeight,Location location,String result) {
+        Drawable drawable = llShow.getBackground();
+        Bitmap bitmap = getRectangleBitmap(drawable,location);
+        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
+
         if (TextUtils.isEmpty(result)){
             LogUtils.d("addListenAnswer is null");
             return;
@@ -1074,7 +1093,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             //获取中位点
             // 30 是textSize的1.5倍换算过来的
             double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
-            double midY = 1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 + location.getTop_left().getY() + 30 ;
+            double midY =  location.getTop_left().getY() - 30 ;
             TextView child = new TextView(this);
             child.setTextSize(20);
             String result = results.get(j);
@@ -1091,6 +1110,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight)  ,0,0);
             child.setLayoutParams(params);
             // 调用一个参数的addView方法
+            Drawable drawable = llShow.getBackground();
+            Bitmap bitmap = getRectangleBitmap(drawable,location);
+            llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
             llShow.addView(child,params);
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
