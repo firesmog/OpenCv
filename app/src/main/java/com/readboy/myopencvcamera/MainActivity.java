@@ -69,6 +69,7 @@ import com.readboy.util.BitmapUtils;
 import com.readboy.util.DeviceUtil;
 import com.readboy.util.GrayUtils;
 import com.readboy.util.GsonUtil;
+import com.readboy.util.PhoneTypeUtil;
 import com.readboy.util.PhotoUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -167,8 +168,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         DisplayMetrics outMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
         llWidth = outMetrics.widthPixels;
-        llHeight = outMetrics.heightPixels + 72 ;
-
+        LogUtils.d( "PhoneTypeUtil.getSystem() == " + PhoneTypeUtil.getSystem());
+        if(PhoneTypeUtil.SYS_EMUI.equals(PhoneTypeUtil.getSystem())){
+            llHeight = outMetrics.heightPixels ;
+        }else {
+            llHeight = outMetrics.heightPixels + 72;
+        }
 
     }
 
@@ -662,6 +667,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
             BitmapUtils.saveImageToGallery(stretch,this,9527 +  j);
             doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType(),null);
+
         }
     }
 
@@ -690,6 +696,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             pointScrop.add(new Point(Math.min((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight   + marginMore ,bitmap.getHeight())));
             final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
             doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType(),null);
+
 
         }catch (Exception e){
             LogUtils.e("dealListenQuestion error = " + e.getMessage());
@@ -888,6 +895,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     }
 
     private void doNetRequest(final Bitmap bitmap, final Location[] locations, final double ratioWidth , final double ratioHeight , final int type,Location location ) {
+        LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight + ",llWidth = " + llWidth + "，llHeight = " + llHeight  );
         if (null == bitmap){
             LogUtils.d("doNetRequest null == bitmap");
             return;
