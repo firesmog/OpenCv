@@ -24,7 +24,7 @@ public class BinaryUtils {
      */
     public static Mat binaryNative(Mat src){
         Mat dst = src.clone();
-        Imgproc.adaptiveThreshold(src, dst, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 31, 30);
+        Imgproc.adaptiveThreshold(src, dst, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 13, 10);
         return dst;
     }
 

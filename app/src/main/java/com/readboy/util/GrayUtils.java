@@ -253,7 +253,7 @@ public class GrayUtils {
         int width = GeneralUtils.getImgWidth(src), height = GeneralUtils.getImgHeight(src);
         int value;
 
-        int threshold = 125;
+        int threshold =  123;
         LogUtils.d("threshold result = " + threshold);
         for (j = 0; j < height; j++) {
             for (i = 0; i < width; i++) {

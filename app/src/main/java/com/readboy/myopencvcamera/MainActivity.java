@@ -14,6 +14,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
@@ -80,6 +81,7 @@ import java.util.Map;
 import java.util.Random;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
+import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
 
 @SuppressLint("NewApi")
 
@@ -240,7 +242,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
               // dealRectangleCorrect(mRgba);
                 //showAutoCropPicture(mRgba);
                 //savePicture(mRgba);
-                savePictureAccordExam(mRgba);
+                 savePictureAccordExam(mRgba);
+
+
+
+
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
@@ -293,8 +299,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
     private Mat processImage( Mat gray ) {
         Mat frame = new Mat();
-        //Imgproc.cvtColor( gray , gray ,Imgproc.COLOR_RGBA2GRAY);//将源图像转化为灰度图像
-        //Imgproc.equalizeHist(gray,frame);
+        Bitmap bitmap1 = Bitmap.createBitmap(gray.width(), gray.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(gray, bitmap1);
+        BitmapUtils.saveImageToGallery(bitmap1,this,8888);
         Imgproc.cvtColor(gray,frame,Imgproc. COLOR_RGBA2RGB);
         Mat src = GrayUtils.grayColByAdapThreshold(frame);
         src = BinaryUtils.binaryNative(src);
@@ -304,6 +311,22 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         BitmapUtils.saveImageToGallery(bitmap,this,9999);
         return src;
     }
+
+    //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
+    /*private Mat processImage( Mat gray ) {
+        Mat b = new Mat();
+        Mat s = new Mat();
+
+        //高斯模糊效果较好，size里的参数只能为奇数
+        Imgproc.GaussianBlur(gray,b, new Size(1,1),0);
+        //Imgproc.Laplacian(gray,s,-1,3);//Laplace边缘提取
+        Mat src = new Mat();
+        Imgproc.threshold(b, src, 125, 255, THRESH_BINARY);
+        Bitmap bitmap = Bitmap.createBitmap(src.width(), src.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(src, bitmap);
+        BitmapUtils.saveImageToGallery(bitmap,this,9999);
+        return src;
+    }*/
 
 
     public List<Point> getCornersByContour(Mat imgsource){
@@ -432,7 +455,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Utils.matToBitmap(frameData, bitmap);
         Mat edge=new Mat();
         Imgproc.Canny(frameData,edge,90,270,5,true);
-        Utils.matToBitmap(frame, bitmap);
+        Utils.matToBitmap(edge, bitmap);
+        BitmapUtils.saveImageToGallery(bitmap,this,7777);
         List<Point> points = getCornersByContour(edge);
         for (Point point : points) {
             LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
