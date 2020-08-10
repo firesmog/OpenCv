@@ -242,11 +242,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
               // dealRectangleCorrect(mRgba);
                 //showAutoCropPicture(mRgba);
                 //savePicture(mRgba);
-                 savePictureAccordExam(mRgba);
-
-
-
-
+                savePictureAccordExam(mRgba);
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
@@ -299,17 +295,41 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
     private Mat processImage( Mat gray ) {
         Mat frame = new Mat();
-        Bitmap bitmap1 = Bitmap.createBitmap(gray.width(), gray.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(gray, bitmap1);
-        BitmapUtils.saveImageToGallery(bitmap1,this,8888);
         Imgproc.cvtColor(gray,frame,Imgproc. COLOR_RGBA2RGB);
         Mat src = GrayUtils.grayColByAdapThreshold(frame);
+        //testParameters(src);
+        Imgproc.GaussianBlur(src,src, new Size(3,3),0);//高斯滤波去除小噪点
+        src = BinaryUtils.binaryNative(src,0,0);
+        BitmapUtils.savePicAsBitmap(src,this,100);
+        return src;
+    }
+
+
+
+    private void testParameters(Mat src){
+        Mat src1 = new Mat();
+        Mat src2 = new Mat();
+        Mat src3 = new Mat();
+        Mat src4 = new Mat();
+        Mat src5 = new Mat();
+        Imgproc.GaussianBlur(src,src1, new Size(3,3),0);//高斯滤波去除小噪点
+        Imgproc.GaussianBlur(src,src2, new Size(5,5),0);//高斯滤波去除小噪点
+        Imgproc.GaussianBlur(src,src3, new Size(7,7),0);//高斯滤波去除小噪点
+        Imgproc.medianBlur(src,src4,3);
+        Imgproc.equalizeHist(src,src5);
+        savePic(src1,1111);
+        savePic(src2,2222);
+        savePic(src3,3333);
+        savePic(src4,4444);
+        savePic(src5,5555);
+    }
+
+    private void savePic(Mat src,int i){
         src = BinaryUtils.binaryNative(src);
         //Imgproc.equalizeHist(src,src);
         Bitmap bitmap = Bitmap.createBitmap(src.width(), src.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(src, bitmap);
-        BitmapUtils.saveImageToGallery(bitmap,this,9999);
-        return src;
+        BitmapUtils.saveImageToGallery(bitmap,this,i);
     }
 
     //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数

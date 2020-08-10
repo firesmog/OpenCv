@@ -28,6 +28,17 @@ public class BinaryUtils {
         return dst;
     }
 
+    /**
+     * opencv自带的二值化
+     * @param src
+     * @return
+     */
+    public static Mat binaryNative(Mat src,int type1,int type2){
+        Mat dst = src.clone();
+        Imgproc.adaptiveThreshold(src, dst, 255, type1, type2, 31, 30);
+        return dst;
+    }
+
 
     /**
      * 图像二值化 阀值自适应确定

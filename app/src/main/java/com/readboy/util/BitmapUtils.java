@@ -13,6 +13,8 @@ import android.widget.Toast;
 
 import com.readboy.log.LogUtils;
 
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
@@ -169,6 +171,12 @@ public class BitmapUtils {
         //获取文件
         File file = new File(appDir, fileName);
         return file.getPath();
+    }
+
+    public static void savePicAsBitmap(Mat src,Context context, int i){
+        Bitmap bitmap = Bitmap.createBitmap(src.width(), src.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(src, bitmap);
+        BitmapUtils.saveImageToGallery(bitmap,context,i);
     }
 
     public static int saveImageToGallery(Bitmap bmp, Context context,int i) {
