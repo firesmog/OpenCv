@@ -296,11 +296,13 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private Mat processImage( Mat gray ) {
         Mat frame = new Mat();
         Imgproc.cvtColor(gray,frame,Imgproc. COLOR_RGBA2RGB);
-        Mat src = GrayUtils.grayColByAdapThreshold(frame);
-        //testParameters(src);
-        Imgproc.GaussianBlur(src,src, new Size(3,3),0);//高斯滤波去除小噪点
-        src = BinaryUtils.binaryNative(src,0,0);
+       // Mat src = GrayUtils.grayColByAdapThreshold(frame);
+        Mat src = GrayUtils.grayNative(frame);
         BitmapUtils.savePicAsBitmap(src,this,100);
+        //Imgproc.GaussianBlur(src,src, new Size(3,3),0);//高斯滤波去除小噪点
+        //BitmapUtils.savePicAsBitmap(src,this,101);
+        src = BinaryUtils.binaryNative(src,0,0);
+        BitmapUtils.savePicAsBitmap(src,this,102);
         return src;
     }
 
