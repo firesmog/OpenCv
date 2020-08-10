@@ -14,6 +14,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
@@ -293,16 +294,41 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
     private Mat processImage( Mat gray ) {
         Mat frame = new Mat();
-        //Imgproc.cvtColor( gray , gray ,Imgproc.COLOR_RGBA2GRAY);//将源图像转化为灰度图像
-        //Imgproc.equalizeHist(gray,frame);
         Imgproc.cvtColor(gray,frame,Imgproc. COLOR_RGBA2RGB);
         Mat src = GrayUtils.grayColByAdapThreshold(frame);
+        //testParameters(src);
+        Imgproc.GaussianBlur(src,src, new Size(3,3),0);//高斯滤波去除小噪点
+        src = BinaryUtils.binaryNative(src,0,0);
+        BitmapUtils.savePicAsBitmap(src,this,100);
+        return src;
+    }
+
+
+
+    private void testParameters(Mat src){
+        Mat src1 = new Mat();
+        Mat src2 = new Mat();
+        Mat src3 = new Mat();
+        Mat src4 = new Mat();
+        Mat src5 = new Mat();
+        Imgproc.GaussianBlur(src,src1, new Size(3,3),0);//高斯滤波去除小噪点
+        Imgproc.GaussianBlur(src,src2, new Size(5,5),0);//高斯滤波去除小噪点
+        Imgproc.GaussianBlur(src,src3, new Size(7,7),0);//高斯滤波去除小噪点
+        Imgproc.medianBlur(src,src4,3);
+        Imgproc.equalizeHist(src,src5);
+        savePic(src1,1111);
+        savePic(src2,2222);
+        savePic(src3,3333);
+        savePic(src4,4444);
+        savePic(src5,5555);
+    }
+
+    private void savePic(Mat src,int i){
         src = BinaryUtils.binaryNative(src);
         //Imgproc.equalizeHist(src,src);
         Bitmap bitmap = Bitmap.createBitmap(src.width(), src.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(src, bitmap);
-        BitmapUtils.saveImageToGallery(bitmap,this,9999);
-        return src;
+        BitmapUtils.saveImageToGallery(bitmap,this,i);
     }
 
 
