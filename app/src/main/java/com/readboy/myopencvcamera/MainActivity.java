@@ -80,6 +80,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Stack;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
@@ -168,7 +169,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         DisplayMetrics outMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
         llWidth = outMetrics.widthPixels;
-        LogUtils.d( "PhoneTypeUtil.getSystem() == " + PhoneTypeUtil.getSystem());
         if(PhoneTypeUtil.SYS_EMUI.equals(PhoneTypeUtil.getSystem())){
             llHeight = outMetrics.heightPixels ;
         }else {
@@ -625,12 +625,25 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 //填空题得每个答案单独处理
                 final List<Point> pointScrop = new ArrayList<>();
                 int marginMore = 6;
+
+                if(i == 0){
+                    pointScrop.add(new Point(Math.max(((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  marginMore),1) ,Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-1.0*marginMore ,1)));
+                    pointScrop.add(new Point(Math.min(((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  marginMore ),bitmap.getWidth()),Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 1.0*marginMore,1)));
+                    pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 2*marginMore ,bitmap.getHeight())));
+                    pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 2*marginMore,bitmap.getHeight())));
+                }else {
+                    pointScrop.add(new Point(Math.max(((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  marginMore),1) ,Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-1.0*marginMore ,1)));
+                    pointScrop.add(new Point(Math.min(((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  marginMore ),bitmap.getWidth()),Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 1.0*marginMore,1)));
+                    pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore ,bitmap.getHeight())));
+                    pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore,bitmap.getHeight())));
+                }
                 pointScrop.add(new Point(Math.max(((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  marginMore),1) ,Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-1.0*marginMore ,1)));
                 pointScrop.add(new Point(Math.min(((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  marginMore ),bitmap.getWidth()),Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 1.0*marginMore,1)));
                 pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore ,bitmap.getHeight())));
                 pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore,bitmap.getHeight())));
                 final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
-               new Thread(new Runnable() {
+                BitmapUtils.saveImageToGallery(stretch,this,11111 + 100*j + i);
+                new Thread(new Runnable() {
                    @Override
                    public void run() {
                        LogUtils.d("realQuestion == doNetRequest");
@@ -665,7 +678,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             pointScrop.add(new Point(Math.max((leftTop.x  + realQuestionLeftTop.getX()*ratioWidth)  -2.2*marginMore,1),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight  + 1.2*marginMore ,bitmap.getHeight())));
             pointScrop.add(new Point(Math.min((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight   + 1.2*marginMore ,bitmap.getHeight())));
             Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
-            BitmapUtils.saveImageToGallery(stretch,this,9527 +  j);
+            BitmapUtils.saveImageToGallery(stretch,this,6660 +  j);
             doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType(),null);
 
         }
@@ -695,6 +708,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             pointScrop.add(new Point(Math.max((leftTop.x  + realQuestionLeftTop.getX()*ratioWidth)  -2.2*marginMore,1),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight  + marginMore ,bitmap.getHeight())));
             pointScrop.add(new Point(Math.min((leftTop.x  + realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + realQuestionRightBottom.getY()*ratioHeight   + marginMore ,bitmap.getHeight())));
             final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
+            BitmapUtils.saveImageToGallery(stretch,this,11111);
             doNetRequest(stretch,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType(),null);
 
 
@@ -985,14 +999,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     for (Line line : lineList) {
                         LogUtils.d("dealListen line = " + line.toString());
                         Word[] words = line.getWord();
-                        for (Word word : words) {
-                            String content = word.getContent();
-                            if(content.contains("(") || content.contains(")") || content.contains("（") || content.contains("）")){
-                                content = content.replaceAll("（","(");
-                                content = content.replaceAll("）",")");
-                                String resultLast = DeviceUtil.getResultFromContent(content);
-                                if(!TextUtils.isEmpty(resultLast) && resultLast.length() == 1 && PhotoUtil.checkEnglish(resultLast)){
-                                    answerResult = resultLast;
+                        String[] results = dealWordEveryLine(words);
+                        if(null != results && results.length > 0){
+                            for (String s : results) {
+                                if(!TextUtils.isEmpty(s) && s.length() == 1 && PhotoUtil.checkEnglish(s)){
+                                    answerResult = s;
                                     final String finalAnswerResult = answerResult;
                                     runOnUiThread(new Runnable() {
                                         @Override
@@ -1003,17 +1014,43 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
                                         }
                                     });
-                                    LogUtils.d("dealChoose resultLast == " + resultLast + "ThreadId = " + Thread.currentThread().getId() + "Location = " + locations.toString());
                                     return;
                                 }
                             }
+                        }else {
+                            LogUtils.d("dealListen results is null " );
+
                         }
+
                     }
                 }
             }
         }
 
     }
+
+    private String[] dealWordEveryLine(Word[] words){
+        String answerResult = "";
+        StringBuilder contentBuilder = new StringBuilder();
+        for (Word word : words) {
+            contentBuilder.append(word);
+        }
+        String content = contentBuilder.toString();
+
+        if(content.contains("(") || content.contains(")") || content.contains("（") || content.contains("）")){
+            content = content.replaceAll("（","(");
+            content = content.replaceAll("）",")");
+            answerResult = DeviceUtil.getResultFromContent(content);
+            LogUtils.d("dealChoose resultLast == " + answerResult);
+        }
+
+        if(TextUtils.isEmpty(answerResult)){
+            return null;
+        }else {
+            return answerResult.split("￥&#&#@");
+        }
+    }
+
 
     private void dealListen(String result, final Location[] locations, final double ratioWidth , final double ratioHeight){
         if (!TextUtils.isEmpty(result)) {
