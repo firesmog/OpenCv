@@ -2,6 +2,7 @@
     <string name="app_name">MyOpenCvCamera</string>
     <string name="title_gray">灰度</string>
     <string name="string_homework_list">作业列表</string>
+    <string name="string_ai_correct">智能批改 > </string>
     <string name="title_rgb">rgb</string>
     <string name="title_canny">canny</string>
     <string name="title_exit">exit</string>

@@ -23,17 +23,13 @@ public class ChoosePaperAdapter extends RecyclerView.Adapter<ChoosePaperAdapter.
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         View testView;
-        TextView testName;
-        ImageView ivSelected;
-        ImageView ivIcon;
+        TextView chapterName;
 
 
         public ViewHolder(View view) {
             super(view);
-            testView = view.findViewById(R.id.ll_text);
-            testName = view.findViewById(R.id.tv_choose_test);
-            ivSelected = view.findViewById(R.id.iv_choose_sign);
-            ivIcon = view.findViewById(R.id.iv_icon);
+            testView = view.findViewById(R.id.ll_paper_test);
+            chapterName = view.findViewById(R.id.tv_paper_chapter);
         }
     }
 
@@ -42,21 +38,14 @@ public class ChoosePaperAdapter extends RecyclerView.Adapter<ChoosePaperAdapter.
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_choose_paper, parent, false);
-        final ViewHolder holder = new ViewHolder(view);
-
-        return holder;
+        return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
         final ChooseTestBean bean = mTestList.get(position);
-        holder.testName.setText(bean.getTestName());
-        holder.ivIcon.setBackground(context.getResources().getDrawable(bean.getTestIconId()));
-        if(bean.isSelected()){
-            holder.ivSelected.setVisibility(View.VISIBLE);
-        }else {
-            holder.ivSelected.setVisibility(View.GONE);
-        }
+        holder.chapterName.setText(bean.getTestName());
+
 
         holder.testView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,7 +54,6 @@ public class ChoosePaperAdapter extends RecyclerView.Adapter<ChoosePaperAdapter.
                     chooseTestBean.setSelected(false);
                 }
                 bean.setSelected(true);
-                holder.ivSelected.setVisibility(View.VISIBLE);
 
                 if(onitemClick != null){
                     onitemClick.onItemClick(position);
