@@ -59,7 +59,7 @@ public class HandleImgUtils {
 		LogUtils.d("findContours size = " + contours.size());
 		double maxArea= 20;
 		MatOfPoint temp_contour= contours.get(0);//假设最大的轮廓在index=0处
-		MatOfPoint2f approxCurve=new MatOfPoint2f();
+		MatOfPoint2f approxCurve = new MatOfPoint2f();
 		for (int idx=0;idx<contours.size();idx++){
 			temp_contour=contours.get(idx);
 			double contourarea=Imgproc.contourArea(temp_contour);
@@ -84,6 +84,11 @@ public class HandleImgUtils {
 			}
 		}
 		LogUtils.d("findContours area max  = " + maxArea);
+
+		if(approxCurve.total() != 4 && maxArea < 10000){
+			LogUtils.d(	"we find no rectangle max area here ");
+			return  null;
+		}
 		return BitmapUtils.getImagePoint(approxCurve);
 	}
 

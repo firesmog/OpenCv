@@ -3,6 +3,7 @@ package com.readboy.myopencvcamera;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,6 +12,7 @@ import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -76,6 +78,23 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private ImageView ivAlbum;
     private ImageView ivPhoto;
     private ImageView ivCancel;
+    private boolean stoped;
+
+
+    Handler handler=new Handler();
+    Runnable runnable = new Runnable() {
+
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+            //要做的事情
+            if(stoped){
+                return;
+            }
+            scanRectangleArea(mRgba,TakePhotoActivity.this);
+            handler.postDelayed(this, 2000);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +104,8 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         initView();
         setAutoFocusListener();
     }
+
+
 
     @Override
     public void onPause() {
@@ -162,13 +183,43 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             case R.id.iv_take_photo:
                 mOpenCvCameraView.cancelAutoFocus();
                 savePictureAccordExam(mRgba);
+                //scanRectangleArea(mRgba,this);
                 llShow.setVisibility(View.VISIBLE);
-                mOpenCvCameraView.setVisibility(View.GONE);
                 break;
             case R.id.iv_from_album:
                 break;
         }
     }
+
+    //处理预览界面的简陋版本
+    private void scanRectangleArea(Mat frame, Context context){
+        Mat frameData = HandleImgUtils.processImage(frame,context);
+        Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
+        Mat edge=new Mat();
+        Imgproc.Canny(frameData,edge,90,270,5,true);
+        Utils.matToBitmap(edge, bitmap);
+        BitmapUtils.saveImageToGallery(bitmap,context,7777);
+        List<Point> points = HandleImgUtils.getCornersByContour(edge);
+        if(null == points){
+            handler.postDelayed(runnable, 2000);
+            return;
+        }
+        final Point leftTop = points.get(0);
+        Point righttop=points.get(1);
+        Point leftbottom=points.get(2);
+        Point rightbottom=points.get(3);
+        Utils.matToBitmap(frame, bitmap);
+        final com.readboy.bean.newexam.Location location = new com.readboy.bean.newexam.Location(leftTop,rightbottom);
+        Bitmap bitmap1 = BitmapUtils.getRectangleBitmap(bitmap,location);
+        handler.removeCallbacks(runnable);
+        stoped = true;
+        mOpenCvCameraView.setVisibility(View.GONE);
+        llShow.setVisibility(View.VISIBLE);
+        llShow.setBackground(new BitmapDrawable(getResources(),bitmap1));
+
+    }
+
+
     @SuppressLint("NewApi")
     private void savePictureAccordExam(Mat frame){
         try {
@@ -203,9 +254,10 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight   );
             LogUtils.d("ratioWidth leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth  );
             LogUtils.d("ratioWidth  width = " +  width  + " , ratioHeight00 = " + height  + ",maxWidth =" + width2 + ",maxHeight = " + height2  + ",gapWidth = " + gapWidth);
-            List<Children> bigQuestion = data.getChildren();
-            Bitmap stretch = BitmapUtils.cropBitmap(points,bitmap);
-            llShow.setBackground(new BitmapDrawable(getResources(),stretch));
+            //Bitmap stretch = BitmapUtils.cropBitmap(points,bitmap);
+            final com.readboy.bean.newexam.Location location = new com.readboy.bean.newexam.Location(leftTop,rightbottom);
+            Bitmap bitmap1 = BitmapUtils.getRectangleBitmap(bitmap,location);
+            llShow.setBackground(new BitmapDrawable(getResources(),bitmap1));
         }catch (Exception e){
             LogUtils.d("error = " + e.getMessage());
         }

@@ -4,13 +4,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.readboy.bean.old.Location;
 import com.readboy.log.LogUtils;
 
 import org.opencv.android.Utils;
@@ -216,5 +221,41 @@ public class BitmapUtils {
             }
         }
         return -1;
+    }
+
+    public static Bitmap getRectangleBitmap(Drawable drawable, Location location){
+        Bitmap tempBitmap = drawableToBitmap(drawable);
+        Canvas canvas = new Canvas(tempBitmap);
+
+        //图像上画矩形
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);//不填充
+        paint.setStrokeWidth(3);  //线的宽度
+        canvas.drawRect(location.getTop_left().getX(), location.getTop_left().getY(), location.getRight_bottom().getX(), location.getRight_bottom().getY(), paint);
+        return tempBitmap;
+
+    }
+
+    public static Bitmap getRectangleBitmap(Bitmap tempBitmap,com.readboy.bean.newexam.Location location){
+        Canvas canvas = new Canvas(tempBitmap);
+
+        //图像上画矩形
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);//不填充
+        paint.setStrokeWidth(3);  //线的宽度
+        canvas.drawRect((int)location.getTop_left().x,(int) location.getTop_left().y, (int)location.getRight_bottom().x, (int)location.getRight_bottom().y, paint);
+        return tempBitmap;
+
+    }
+
+    private static Bitmap drawableToBitmap(Drawable drawable) {
+        Bitmap bitmap = Bitmap.createBitmap( drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(),
+                drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        drawable.draw(canvas);
+        return bitmap;
     }
 }

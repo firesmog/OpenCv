@@ -1141,6 +1141,19 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     }
 
+    private Bitmap getRectangleBitmap(Bitmap tempBitmap,Location location){
+        Canvas canvas = new Canvas(tempBitmap);
+
+        //图像上画矩形
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);//不填充
+        paint.setStrokeWidth(3);  //线的宽度
+        canvas.drawRect(location.getTop_left().getX(), location.getTop_left().getY(), location.getRight_bottom().getX(), location.getRight_bottom().getY(), paint);
+        return tempBitmap;
+
+    }
+
     public void addFillInAnswer(double ratioWidth , double ratioHeight,Location location,String result) {
         Drawable drawable = llShow.getBackground();
         Bitmap bitmap = getRectangleBitmap(drawable,location);
