@@ -99,8 +99,10 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
     }
 
     public void cancelAutoFocus(){
-        mCamera.cancelAutoFocus();
-        Log.d(TAG,"cancelAutoFocus success --");
+        if(null != mCamera){
+            mCamera.cancelAutoFocus();
+            Log.d(TAG,"cancelAutoFocus success --");
+        }
 
     }
 

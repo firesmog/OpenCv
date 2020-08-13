@@ -1,10 +1,216 @@
 <resources>
     <string name="app_name">MyOpenCvCamera</string>
     <string name="title_gray">灰度</string>
+    <string name="string_homework_list">作业列表</string>
     <string name="title_rgb">rgb</string>
     <string name="title_canny">canny</string>
     <string name="title_exit">exit</string>
     <string name="title_click">photo</string>
+    <string name="json_answer_a">{
+	"width": 660,
+	"height": 960,
+	"children": [{
+		"type": 10023,
+		"width": 593,
+		"height": 160,
+		"leftTopX": 33,
+		"leftTopY": 0,
+		"rightBottomX": 626,
+		"rightBottomY": 160,
+		"children": [{
+			"type": "title",
+			"content": "一、单词听写",
+			"width": 594,
+			"height": 60,
+			"leftTopX": 0,
+			"leftTopY": 0,
+			"rightBottomX": 594,
+			"rightBottomY": 60,
+			"answer": []
+		}, {
+			"type": "question",
+			"content": "1.___________________________\n2.___________________________\n3.___________________________\n4.___________________________",
+			"width": 594,
+			"height": 80,
+			"leftTopX": 0,
+			"leftTopY": 60,
+			"rightBottomX": 594,
+			"rightBottomY": 140,
+			"answer": [{
+				"content": "apple",
+				"width": 240,
+				"height": 20,
+				"leftTopX": 28,
+				"leftTopY": 20,
+				"rightBottomX": 268,
+				"rightBottomY": 40
+			}, {
+				"content": "pear",
+				"width": 240,
+				"height": 20,
+				"leftTopX": 306,
+				"leftTopY": 20,
+				"rightBottomX": 546,
+				"rightBottomY": 40
+			}, {
+				"content": "watermelon",
+				"width": 240,
+				"height": 20,
+				"leftTopX": 28,
+				"leftTopY": 60,
+				"rightBottomX": 268,
+				"rightBottomY": 80
+			}, {
+				"content": "banana",
+				"width": 240,
+				"height": 20,
+				"leftTopX": 306,
+				"leftTopY": 60,
+				"rightBottomX": 546,
+				"rightBottomY": 80
+			}]
+		}]
+	}, {
+		"type": 10006,
+		"width": 593,
+		"height": 252,
+		"leftTopX": 33,
+		"leftTopY": 160,
+		"rightBottomX": 626,
+		"rightBottomY": 412,
+		"children": [{
+			"type": "title",
+			"content": "二、客观填空题",
+			"width": 594,
+			"height": 60,
+			"leftTopX": 0,
+			"leftTopY": 0,
+			"rightBottomX": 594,
+			"rightBottomY": 60,
+			"answer": []
+		}, {
+			"type": "question",
+			"content": "1. 13里面的“3”在个位上，表示 ______ 个 ______ ；“1”在十位上，表示 ______ 个 ______ 。",
+			"width": 594,
+			"height": 96,
+			"leftTopX": 0,
+			"leftTopY": 60,
+			"rightBottomX": 594,
+			"rightBottomY": 156,
+			"answer": [{
+				"content": "3",
+				"width": 53,
+				"height": 30,
+				"leftTopX": 284,
+				"leftTopY": 18,
+				"rightBottomX": 337,
+				"rightBottomY": 48
+			}, {
+				"content": "1",
+				"width": 53,
+				"height": 30,
+				"leftTopX": 391,
+				"leftTopY": 18,
+				"rightBottomX": 444,
+				"rightBottomY": 48
+			}, {
+				"content": "1",
+				"width": 53,
+				"height": 30,
+				"leftTopX": 89,
+				"leftTopY": 48,
+				"rightBottomX": 142,
+				"rightBottomY": 78
+			}, {
+				"content": "10",
+				"width": 53,
+				"height": 30,
+				"leftTopX": 196,
+				"leftTopY": 48,
+				"rightBottomX": 249,
+				"rightBottomY": 78
+			}]
+		}, {
+			"type": "question",
+			"content": "2. 配制一种农药，药粉和水的比是1:500，现有药粉3.6千克，配制这种农药需要水 ______ 千克。",
+			"width": 594,
+			"height": 97,
+			"leftTopX": 0,
+			"leftTopY": 156,
+			"rightBottomX": 594,
+			"rightBottomY": 253,
+			"answer": [{
+				"content": "1800",
+				"width": 53,
+				"height": 30,
+				"leftTopX": 89,
+				"leftTopY": 48,
+				"rightBottomX": 142,
+				"rightBottomY": 78
+			}]
+		}]
+	}, {
+		"type": 10001,
+		"width": 593,
+		"height": 548,
+		"leftTopX": 33,
+		"leftTopY": 412,
+		"rightBottomX": 626,
+		"rightBottomY": 960,
+		"children": [{
+			"type": "title",
+			"content": "三、选择题",
+			"width": 594,
+			"height": 60,
+			"leftTopX": 0,
+			"leftTopY": 0,
+			"rightBottomX": 594,
+			"rightBottomY": 60,
+			"answer": []
+		}, {
+			"type": "question",
+			"content": "1.某种商品的进价为a元/件，在销售旺季，商品售价较进价高30%；销售旺季过后，商品又以7折（即原售价的70%）的价格开展促销活动，这时一件该商品的售价为 (  ) 。\n\nA. a元\n\nB. 0.7a元\n\nC. 0.91a元\n\nD. 1.03a元",
+			"width": 594,
+			"height": 278,
+			"leftTopX": 0,
+			"leftTopY": 60,
+			"rightBottomX": 594,
+			"rightBottomY": 338,
+			"answer": [{
+				"content": "C",
+				"width": 53,
+				"height": 30,
+				"leftTopX": 124,
+				"leftTopY": 78,
+				"rightBottomX": 177,
+				"rightBottomY": 108
+			}]
+		}, {
+			"type": "question",
+			"content": "2.11个橘子分给3个小朋友，不要求每个小朋友分得的橘子一样多，但要求分得的橘子个数是单数。想一想，能分吗，请选出正确的选项 (  ) 。\n\nA. 能\n\nB. 不能\n\nC. 不确定",
+			"width": 594,
+			"height": 210,
+			"leftTopX": 0,
+			"leftTopY": 338,
+			"rightBottomX": 594,
+			"rightBottomY": 548,
+			"answer": [{
+				"content": "A",
+				"width": 53,
+				"height": 30,
+				"leftTopX": 498,
+				"leftTopY": 48,
+				"rightBottomX": 551,
+				"rightBottomY": 78
+			}]
+		}]
+	}]
+}</string>
+
+
+    <string name="json_new_data_g">{"width":660,"height":1008,"children":[{"type":10023,"width":594,"height":285,"leftTopX":33,"leftTopY":0,"rightBottomX":627,"rightBottomY":285,"children":[{"type":"title","content":"一、单词听写","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.___________________________\n2.___________________________\n3.___________________________\n4.___________________________\n5.___________________________\n6.___________________________\n7.___________________________\n8.___________________________\n9.___________________________","width":594,"height":205,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":265,"answer":[{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":20,"rightBottomX":271,"rightBottomY":41},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":20,"rightBottomX":552,"rightBottomY":41},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":61,"rightBottomX":271,"rightBottomY":82},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":61,"rightBottomX":552,"rightBottomY":82},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":102,"rightBottomX":271,"rightBottomY":123},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":102,"rightBottomX":552,"rightBottomY":123},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":143,"rightBottomX":271,"rightBottomY":164},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":143,"rightBottomX":552,"rightBottomY":164},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":184,"rightBottomX":271,"rightBottomY":205}]}]},{"type":10006,"width":594,"height":276,"leftTopX":33,"leftTopY":285,"rightBottomX":627,"rightBottomY":561,"children":[{"type":"title","content":"二、客观填空题","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.用ABB式词语填空。\n（1）蜜蜂则嗡嗡地飞着，满身绒毛，落到一朵花上， ______ （这是测试注解）， ______ ，就像一个小毛球，停在上面一动不动了。\n（2）花园里边 ______ 的，红的红，绿的绿，新鲜漂亮。\n（3）说谷子是有芒针的，狗尾草却没有，只是 ______ 的，很像狗(这是测试注解)尾巴。\n","width":594,"height":216,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":276,"answer":[{"content":"______","width":54,"height":30,"leftTopX":441,"leftTopY":48,"rightBottomX":495,"rightBottomY":78},{"content":"______","width":54,"height":30,"leftTopX":108,"leftTopY":78,"rightBottomX":162,"rightBottomY":108},{"content":"______","width":54,"height":30,"leftTopX":135,"leftTopY":108,"rightBottomX":189,"rightBottomY":138},{"content":"______","width":54,"height":30,"leftTopX":387,"leftTopY":138,"rightBottomX":441,"rightBottomY":168}]}]},{"type":10001,"width":594,"height":447,"leftTopX":33,"leftTopY":561,"rightBottomX":627,"rightBottomY":1008,"children":[{"type":"title","content":"三、选择题","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.这里小丫头们听见放风筝，巴不得一声儿，七手八脚，都忙着拿出个美人风筝来，也有搬高凳去的，也有捆剪子股的，也有拨籰子的。 这句话（这是测试注解）运用了 (  ) 修辞手法。\n\nA. 比喻\n\nB. 夸张\n\nC. 排比","width":594,"height":243,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":303,"answer":[{"content":"(  )","width":54,"height":30,"leftTopX":180,"leftTopY":78,"rightBottomX":234,"rightBottomY":108}]},{"type":"question","content":"2.寰”字是 (  ) \n\nA. 上下结构\n\nB. 上中下结构","width":594,"height":144,"leftTopX":0,"leftTopY":303,"rightBottomX":594,"rightBottomY":447,"answer":[{"content":"(  )","width":54,"height":30,"leftTopX":108,"leftTopY":18,"rightBottomX":162,"rightBottomY":48}]}]}]}</string>
+
+
     <string name="json_new_data_h">{"width":660,"height":1008,"children":[{"type":10023,"width":594,"height":285,"leftTopX":33,"leftTopY":0,"rightBottomX":627,"rightBottomY":285,"children":[{"type":"title","content":"一、单词听写","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.___________________________\n2.___________________________\n3.___________________________\n4.___________________________\n5.___________________________\n6.___________________________\n7.___________________________\n8.___________________________\n9.___________________________","width":594,"height":205,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":265,"answer":[{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":20,"rightBottomX":271,"rightBottomY":41},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":20,"rightBottomX":552,"rightBottomY":41},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":61,"rightBottomX":271,"rightBottomY":82},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":61,"rightBottomX":552,"rightBottomY":82},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":102,"rightBottomX":271,"rightBottomY":123},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":102,"rightBottomX":552,"rightBottomY":123},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":143,"rightBottomX":271,"rightBottomY":164},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":143,"rightBottomX":552,"rightBottomY":164},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":184,"rightBottomX":271,"rightBottomY":205}]}]},{"type":10006,"width":594,"height":276,"leftTopX":33,"leftTopY":285,"rightBottomX":627,"rightBottomY":561,"children":[{"type":"title","content":"二、客观填空题","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.用ABB式词语填空。\n（1）蜜蜂则嗡嗡地飞着，满身绒毛，落到一朵花上， ______ ， ______ ，就像一个小毛球，停在上面一动不动了。\n（2）花园里边 ______ 的，红的红，绿的绿，新鲜漂亮。\n（3）说谷子是有芒针的，狗尾草却没有，只是 ______ 的，很像狗尾巴。\n","width":594,"height":216,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":276,"answer":[{"content":"______","width":54,"height":30,"leftTopX":441,"leftTopY":48,"rightBottomX":495,"rightBottomY":78},{"content":"______","width":54,"height":30,"leftTopX":0,"leftTopY":78,"rightBottomX":54,"rightBottomY":108},{"content":"______","width":54,"height":30,"leftTopX":135,"leftTopY":108,"rightBottomX":189,"rightBottomY":138},{"content":"______","width":54,"height":30,"leftTopX":387,"leftTopY":138,"rightBottomX":441,"rightBottomY":168}]}]},{"type":10001,"width":594,"height":447,"leftTopX":33,"leftTopY":561,"rightBottomX":627,"rightBottomY":1008,"children":[{"type":"title","content":"三、选择题","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.这里小丫头们听见放风筝，巴不得一声儿，七手八脚，都忙着拿出个美人风筝来，也有搬高凳去的，也有捆剪子股的，也有拨籰子的。 这句话运用了 (   ) 修辞手法。\n\nA. 比喻\n\nB. 夸张\n\nC. 排比","width":594,"height":243,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":303,"answer":[{"content":"(   )","width":72,"height":30,"leftTopX":36,"leftTopY":78,"rightBottomX":108,"rightBottomY":108}]},{"type":"question","content":"2.寰”字是 (   ) \n\nA. 上下结构\n\nB. 上中下结构","width":594,"height":144,"leftTopX":0,"leftTopY":303,"rightBottomX":594,"rightBottomY":447,"answer":[{"content":"(   )","width":72,"height":30,"leftTopX":108,"leftTopY":18,"rightBottomX":180,"rightBottomY":48}]}]}]}</string>
     <string name="json_new_data_f">{"width":660,"height":963,"children":[{"type":10001,"width":594,"height":426,"leftTopX":33,"leftTopY":0,"rightBottomX":627,"rightBottomY":426,"children":[{"type":"title","content":"一、选择题","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.情景选择 你在图书馆看书，有同学大声叫你，你会说：  (   ) \n\nA. Don't run here.\n\nB. Don't shout here.\n\nC. Don't talk here.","width":594,"height":183,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":243,"answer":[{"content":"(   )","width":72,"height":30,"leftTopX":486,"leftTopY":18,"rightBottomX":558,"rightBottomY":48}]},{"type":"question","content":"2.I'm  (   )  to Beijing.\n\nA. going\n\nB. go\n\nC. goes","width":594,"height":183,"leftTopX":0,"leftTopY":243,"rightBottomX":594,"rightBottomY":426,"answer":[{"content":"(   )","width":72,"height":30,"leftTopX":72,"leftTopY":18,"rightBottomX":144,"rightBottomY":48}]}]},{"type":10023,"width":594,"height":285,"leftTopX":33,"leftTopY":426,"rightBottomX":627,"rightBottomY":711,"children":[{"type":"title","content":"二、单词听写","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.___________________________\n2.___________________________\n3.___________________________\n4.___________________________\n5.___________________________\n6.___________________________\n7.___________________________\n8.___________________________\n9.___________________________","width":594,"height":205,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":265,"answer":[{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":20,"rightBottomX":271,"rightBottomY":41},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":20,"rightBottomX":552,"rightBottomY":41},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":61,"rightBottomX":271,"rightBottomY":82},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":61,"rightBottomX":552,"rightBottomY":82},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":102,"rightBottomX":271,"rightBottomY":123},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":102,"rightBottomX":552,"rightBottomY":123},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":143,"rightBottomX":271,"rightBottomY":164},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":143,"rightBottomX":552,"rightBottomY":164},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":184,"rightBottomX":271,"rightBottomY":205}]}]},{"type":10006,"width":594,"height":252,"leftTopX":33,"leftTopY":711,"rightBottomX":627,"rightBottomY":963,"children":[{"type":"title","content":"三、客观填空题","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.My parents and I are going to Shanghai for the  ______ （周末）.","width":594,"height":96,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":156,"answer":[{"content":"______","width":54,"height":30,"leftTopX":459,"leftTopY":18,"rightBottomX":513,"rightBottomY":48}]},{"type":"question","content":"2.昨晚我弟弟使用了电脑。\nMy brother  ______  the  ______  last night.","width":594,"height":96,"leftTopX":0,"leftTopY":156,"rightBottomX":594,"rightBottomY":252,"answer":[{"content":"______","width":54,"height":30,"leftTopX":117,"leftTopY":48,"rightBottomX":171,"rightBottomY":78},{"content":"______","width":54,"height":30,"leftTopX":252,"leftTopY":48,"rightBottomX":306,"rightBottomY":78}]}]}]}</string>
     <string name="json_new_data_e">{"width":660,"height":924,"children":[{"type":10006,"width":594,"height":252,"leftTopX":33,"leftTopY":0,"rightBottomX":627,"rightBottomY":252,"children":[{"type":"title","content":"一、客观填空题","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.小丽有4件上衣，3条裤子，她一共有  ______ 种不同的穿法。","width":594,"height":66,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":126,"answer":[{"content":"______","width":54,"height":30,"leftTopX":333,"leftTopY":18,"rightBottomX":387,"rightBottomY":48}]},{"type":"question","content":"2.一个盒子里装有同样的两种颜色的玻璃球，红球的有8个，绿球的有5个。从盒子里摸出一个球，摸到  ______ 色球的可能性比摸到  ______ 色球的可能性小。","width":594,"height":126,"leftTopX":0,"leftTopY":126,"rightBottomX":594,"rightBottomY":252,"answer":[{"content":"______","width":54,"height":30,"leftTopX":243,"leftTopY":48,"rightBottomX":297,"rightBottomY":78},{"content":"______","width":54,"height":30,"leftTopX":504,"leftTopY":48,"rightBottomX":558,"rightBottomY":78}]}]},{"type":10001,"width":594,"height":387,"leftTopX":33,"leftTopY":252,"rightBottomX":627,"rightBottomY":639,"children":[{"type":"title","content":"二、选择题","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.明天进行数学模拟考，我一定能考100分。 (   ) \n\nA. 正确\n\nB. 错误","width":594,"height":144,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":204,"answer":[{"content":"(   )","width":72,"height":30,"leftTopX":369,"leftTopY":18,"rightBottomX":441,"rightBottomY":48}]},{"type":"question","content":"2.六（1）班有50人，同一个月份出生的学生至少有 (   ) 人。\n\nA. 5\n\nB. 4\n\nC. 6","width":594,"height":183,"leftTopX":0,"leftTopY":204,"rightBottomX":594,"rightBottomY":387,"answer":[{"content":"(   )","width":72,"height":30,"leftTopX":423,"leftTopY":18,"rightBottomX":495,"rightBottomY":48}]}]},{"type":10023,"width":594,"height":285,"leftTopX":33,"leftTopY":639,"rightBottomX":627,"rightBottomY":924,"children":[{"type":"title","content":"三、单词听写","width":594,"height":60,"leftTopX":0,"leftTopY":0,"rightBottomX":594,"rightBottomY":60,"answer":[]},{"type":"question","content":"1.___________________________\n2.___________________________\n3.___________________________\n4.___________________________\n5.___________________________\n6.___________________________\n7.___________________________\n8.___________________________\n9.___________________________","width":594,"height":205,"leftTopX":0,"leftTopY":60,"rightBottomX":594,"rightBottomY":265,"answer":[{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":20,"rightBottomX":271,"rightBottomY":41},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":20,"rightBottomX":552,"rightBottomY":41},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":61,"rightBottomX":271,"rightBottomY":82},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":61,"rightBottomX":552,"rightBottomY":82},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":102,"rightBottomX":271,"rightBottomY":123},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":102,"rightBottomX":552,"rightBottomY":123},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":143,"rightBottomX":271,"rightBottomY":164},{"content":"___________________________","width":243,"height":21,"leftTopX":309,"leftTopY":143,"rightBottomX":552,"rightBottomY":164},{"content":"___________________________","width":243,"height":21,"leftTopX":28,"leftTopY":184,"rightBottomX":271,"rightBottomY":205}]}]}]}</string>

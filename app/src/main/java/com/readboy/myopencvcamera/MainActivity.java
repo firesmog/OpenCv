@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 //showDifferentColorImage(mRgba);
                 mOpenCvCameraView.cancelAutoFocus();
                 getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-              // dealRectangleCorrect(mRgba);
+                // dealRectangleCorrect(mRgba);
                 //showAutoCropPicture(mRgba);
                 //savePicture(mRgba);
                 savePictureAccordExam(mRgba);
@@ -540,71 +540,77 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Point leftbottom=points.get(2);
         Point rightbottom=points.get(3);
         Utils.matToBitmap(frame, bitmap);*/
-        RectangleInfo info = dealRectangleCorrect(frame);
-        List<Point> points = info.getPoints();
-        final Point leftTop = points.get(0);
-        Point righttop=points.get(1);
-        Point leftbottom=points.get(2);
-        Point rightbottom=points.get(3);
-        final Bitmap bitmap = info.getBitmap();
-        //add by lzy for class exam demo
-        //试卷宽高分别为600 和 720 px ,需要先计算拍照得宽高和真实试卷宽高得比例才好定位
-        //这里要考虑到展示到设备上得时候，图片可能已经拉伸或压缩了，所以不推荐使用图片比例计算
-        double leftHeight = leftbottom.y - leftTop.y;
-        double rightHeight = rightbottom.y - righttop.y;
-        double topWidth =  righttop.x - leftTop.x;
-        double bottomWidth = rightbottom.x - leftbottom.x;
+       try {
+           RectangleInfo info = dealRectangleCorrect(frame);
+           List<Point> points = info.getPoints();
+           final Point leftTop = points.get(0);
+           Point righttop=points.get(1);
+           Point leftbottom=points.get(2);
+           Point rightbottom=points.get(3);
+           final Bitmap bitmap = info.getBitmap();
+           //add by lzy for class exam demo
+           //试卷宽高分别为600 和 720 px ,需要先计算拍照得宽高和真实试卷宽高得比例才好定位
+           //这里要考虑到展示到设备上得时候，图片可能已经拉伸或压缩了，所以不推荐使用图片比例计算
+           double leftHeight = leftbottom.y - leftTop.y;
+           double rightHeight = rightbottom.y - righttop.y;
+           double topWidth =  righttop.x - leftTop.x;
+           double bottomWidth = rightbottom.x - leftbottom.x;
 
-        double height = Math.min(leftHeight, rightHeight);
-        double height2 = Math.max(leftHeight, rightHeight);
-        double width = Math.min(bottomWidth, topWidth);
-        double width2 = Math.max(bottomWidth, topWidth);
+           double height = Math.min(leftHeight, rightHeight);
+           double height2 = Math.max(leftHeight, rightHeight);
+           double width = Math.min(bottomWidth, topWidth);
+           double width2 = Math.max(bottomWidth, topWidth);
 
-        ExamBean data = DeviceUtil.getExamData(this);
-        int examHeight = data.getHeight();
-        int examWidth = data.getWidth();
-        double gapWidth = width2 - width;
-        //final double ratioHeight  = height/examHeight ;
-        final double ratioHeight  = height/examHeight ;
-        //final double ratioWidth = width/examWidth;
-        final double ratioWidth = width/examWidth;
-        LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight   );
-        LogUtils.d("ratioWidth leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth  );
-        LogUtils.d("ratioWidth  width = " +  width  + " , ratioHeight00 = " + height  + ",maxWidth =" + width2 + ",maxHeight = " + height2  + ",gapWidth = " + gapWidth);
-        List<Children> bigQuestion = data.getChildren();
-        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
+           ExamBean data = DeviceUtil.getExamData(this);
+           LogUtils.d("getExamData = = " + data.toString()   );
 
-
-        for (final Children children : bigQuestion) {
-            switch (children.getType()){
-                case 10001:
-                    //1.处理选择题
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            dealChooseQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
-                        }
-                    }).start();
-
-                    break;
-                case 10006:
-                    //2.处理主观填空题
-                    //dealListenQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
-                    dealFillInQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
+           int examHeight = data.getHeight();
+           int examWidth = data.getWidth();
+           double gapWidth = width2 - width;
+           //final double ratioHeight  = height/examHeight ;
+           final double ratioHeight  = height/examHeight ;
+           //final double ratioWidth = width/examWidth;
+           final double ratioWidth = width/examWidth;
+           LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight   );
+           LogUtils.d("ratioWidth leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth  );
+           LogUtils.d("ratioWidth  width = " +  width  + " , ratioHeight00 = " + height  + ",maxWidth =" + width2 + ",maxHeight = " + height2  + ",gapWidth = " + gapWidth);
+           List<Children> bigQuestion = data.getChildren();
+           llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
 
 
-                    break;
-                case 10023:
-                    //3.处理听力填空题
-                   new Thread(new Runnable() {
-                       @Override
-                       public void run() {
-                           dealListenQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
-                       }
-                   }).start();
-                    break;
-            }
-        }
+           for (final Children children : bigQuestion) {
+               switch (children.getType()){
+                   case 10001:
+                       //1.处理选择题
+                       new Thread(new Runnable() {
+                           @Override
+                           public void run() {
+                               dealChooseQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
+                           }
+                       }).start();
+
+                       break;
+                   case 10006:
+                       //2.处理主观填空题
+                       //dealListenQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
+                       dealFillInQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
+
+
+                       break;
+                   case 10023:
+                       //3.处理听力填空题
+                       new Thread(new Runnable() {
+                           @Override
+                           public void run() {
+                               dealListenQuestion(children,leftTop,ratioWidth,ratioHeight,bitmap);
+                           }
+                       }).start();
+                       break;
+               }
+           }
+       }catch (Exception e){
+           LogUtils.d("error = " + e.getMessage());
+       }
 
 
     }
@@ -627,20 +633,17 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 int marginMore = 6;
 
                 if(i == 0){
-                    pointScrop.add(new Point(Math.max(((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  marginMore),1) ,Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-1.0*marginMore ,1)));
-                    pointScrop.add(new Point(Math.min(((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  marginMore ),bitmap.getWidth()),Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 1.0*marginMore,1)));
-                    pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 2*marginMore ,bitmap.getHeight())));
-                    pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 2*marginMore,bitmap.getHeight())));
+                    pointScrop.add(new Point(Math.max(((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  1.4*marginMore),1) ,Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-1.0*marginMore ,1)));
+                    pointScrop.add(new Point(Math.min(((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  1.4*marginMore ),bitmap.getWidth()),Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 1.0*marginMore,1)));
+                    pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -1.4*marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 2*marginMore ,bitmap.getHeight())));
+                    pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +  1.4* marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 2*marginMore,bitmap.getHeight())));
                 }else {
-                    pointScrop.add(new Point(Math.max(((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  marginMore),1) ,Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-1.0*marginMore ,1)));
-                    pointScrop.add(new Point(Math.min(((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  marginMore ),bitmap.getWidth()),Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 1.0*marginMore,1)));
-                    pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore ,bitmap.getHeight())));
-                    pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore,bitmap.getHeight())));
+                    pointScrop.add(new Point(Math.max(((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  1.4*marginMore),1) ,Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-0.9*marginMore ,1)));
+                    pointScrop.add(new Point(Math.min(((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  1.4*marginMore ),bitmap.getWidth()),Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 0.9*marginMore,1)));
+                    pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  - 1.4*marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 1.3*marginMore ,bitmap.getHeight())));
+                    pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   1.4*marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 1.3*marginMore,bitmap.getHeight())));
                 }
-                pointScrop.add(new Point(Math.max(((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  marginMore),1) ,Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-1.0*marginMore ,1)));
-                pointScrop.add(new Point(Math.min(((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  marginMore ),bitmap.getWidth()),Math.max((leftTop.y + (answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 1.0*marginMore,1)));
-                pointScrop.add(new Point(Math.max((leftTop.x + (answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -marginMore,1),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore ,bitmap.getHeight())));
-                pointScrop.add(new Point(Math.min((leftTop.x + (answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   marginMore ,bitmap.getWidth()),Math.min(leftTop.y + (answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + marginMore,bitmap.getHeight())));
+
                 final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
                 BitmapUtils.saveImageToGallery(stretch,this,11111 + 100*j + i);
                 new Thread(new Runnable() {

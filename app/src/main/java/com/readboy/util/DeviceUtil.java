@@ -16,11 +16,17 @@ import io.netty.util.internal.StringUtil;
 
 public class DeviceUtil {
     public static ExamBean getExamData(Context context){
-        String question = context.getResources().getString(R.string.json_new_data_e);
-        question = replaceBlank(question);
-        question = question.replace("\\", "");
-        question = question.replace("\n", "");
-        ExamBean data = GsonUtil.gsonToBean(question, ExamBean.class);
+        ExamBean data = null;
+        try {
+            String question = context.getResources().getString(R.string.json_answer_a);
+            question = replaceBlank(question);
+            question = question.replace("\\", "");
+            question = question.replace("\n", "");
+            question = question.replace("/", "");
+            data = GsonUtil.gsonToBean(question, ExamBean.class);
+        }catch (Exception e){
+            LogUtils.e("error == " + e.getMessage());
+        }
         return data;
     }
 
@@ -44,7 +50,7 @@ public class DeviceUtil {
             char c = content.charAt(i);
             if('(' == c){
                 stack.push(c);
-            }else if(')' == c){
+            }else if(')' == c && !stack.empty()){
                 stack.pop();
                 result.append("￥&#&#@");
             }else if(!stack.isEmpty()){

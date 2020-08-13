@@ -55,4 +55,6 @@ dependencies {
     implementation files('libs/commons-codec-1.6.jar')
     implementation files('libs/netty-all-4.1.15.Final.jar')
     implementation "androidx.exifinterface:exifinterface:1.2.0"
+    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+
 }
