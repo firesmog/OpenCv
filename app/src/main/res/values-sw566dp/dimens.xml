@@ -11,8 +11,8 @@
     <dimen name="qb_px_dec_3">-2.26dp</dimen>
 <dimen name="qb_px_4">3.01dp</dimen>
 <dimen name="qb_px_dec_4">-3.01dp</dimen>
-<dimen name="qb_px_5">3.76dp</dimen>
-<dimen name="qb_px_6">4.52dp</dimen>
+
+    <dimen name="qb_px_6">4.52dp</dimen>
 <dimen name="qb_px_7">5.27dp</dimen>
 <dimen name="qb_px_8">6.02dp</dimen>
 <dimen name="qb_px_9">6.77dp</dimen>

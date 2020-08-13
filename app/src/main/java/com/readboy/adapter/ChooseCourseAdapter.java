@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,7 +16,7 @@ import java.util.List;
 
 import io.reactivex.annotations.NonNull;
 
-public class TestExamAdapter extends RecyclerView.Adapter<TestExamAdapter.ViewHolder> {
+public class ChooseCourseAdapter extends RecyclerView.Adapter<ChooseCourseAdapter.ViewHolder> {
     private List<ChooseTestBean> mTestList;
     private Context context;
     private OnItemClick onitemClick;
@@ -42,7 +41,7 @@ public class TestExamAdapter extends RecyclerView.Adapter<TestExamAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_text_exam, parent, false);
+                .inflate(R.layout.item_choose_course, parent, false);
         final ViewHolder holder = new ViewHolder(view);
 
         return holder;
@@ -81,7 +80,7 @@ public class TestExamAdapter extends RecyclerView.Adapter<TestExamAdapter.ViewHo
         return mTestList.size();
     }
 
-    public TestExamAdapter(List<ChooseTestBean> testList, Context context) {
+    public ChooseCourseAdapter(List<ChooseTestBean> testList, Context context) {
         mTestList = testList;
         this.context = context;
     }

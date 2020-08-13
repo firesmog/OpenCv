@@ -33,8 +33,10 @@
     <dimen name="qb_px_30">30dp</dimen>
     <dimen name="qb_px_32">32dp</dimen>
     <dimen name="qb_px_33">33dp</dimen>
+    <dimen name="qb_px_34">34dp</dimen>
     <dimen name="qb_px_35">35dp</dimen>
     <dimen name="qb_px_36">36dp</dimen>
+    <dimen name="qb_px_37">37dp</dimen>
     <dimen name="qb_px_38">38dp</dimen>
     <dimen name="qb_px_40">40dp</dimen>
     <dimen name="qb_px_41">41dp</dimen>
@@ -134,6 +136,7 @@
     <dimen name="qb_px_760">760dp</dimen>
     <dimen name="qb_px_820">820dp</dimen>
     <dimen name="qb_px_884">884dp</dimen>
+    <dimen name="qb_px_1030">1030dp</dimen>
 
 
 

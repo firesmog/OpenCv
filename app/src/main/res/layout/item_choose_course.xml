@@ -24,7 +24,7 @@
     <TextView
         android:id="@+id/tv_choose_test"
         android:layout_toEndOf="@id/iv_icon"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_gravity="center_vertical"

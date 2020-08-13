@@ -10,8 +10,8 @@
 <dimen name="qb_px_dec_4">-3.99dp</dimen>
 <dimen name="qb_px_5">4.99dp</dimen>
 <dimen name="qb_px_6">5.98dp</dimen>
-<dimen name="qb_px_7">6.98dp</dimen>
-<dimen name="qb_px_8">7.98dp</dimen>
+
+    <dimen name="qb_px_8">7.98dp</dimen>
 <dimen name="qb_px_9">8.98dp</dimen>
 <dimen name="qb_px_10">9.97dp</dimen>
 <dimen name="qb_px_dec_10">-9.97dp</dimen>

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ChooseTestExamActivity">
+    tools:context=".ChoosePaperExamActivity">
 
     <TextView
         android:id="@+id/tv_title"
@@ -23,6 +23,7 @@
         android:layout_below="@id/tv_title"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/color_ebf5ff"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -32,20 +33,29 @@
             >
             <androidx.recyclerview.widget.RecyclerView
                 android:layout_marginTop="@dimen/qb_px_34"
-                android:id="@+id/rv_recyclerView"
+                android:id="@+id/rv_recyclerView_course"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 />
         </LinearLayout>
 
+        <ImageView
+            android:layout_width="@dimen/qb_px_27"
+            android:layout_height="match_parent"
+            />
+
         <LinearLayout
-            android:layout_marginTop="@dimen/qb_px_34"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:background="@color/color_ebf5ff"
+            android:orientation="vertical"
             >
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/qb_px_34"
+                />
+
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_recyclerView2"
+                android:id="@+id/rv_recyclerView_paper"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 />

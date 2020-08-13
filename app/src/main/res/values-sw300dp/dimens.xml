@@ -50,7 +50,8 @@
 <dimen name="qb_px_45">17.95dp</dimen>
 <dimen name="qb_px_46">18.35dp</dimen>
 <dimen name="qb_px_47">18.75dp</dimen>
-<dimen name="qb_px_48">19.15dp</dimen>
+
+    <dimen name="qb_px_48">19.15dp</dimen>
 <dimen name="qb_px_49">19.55dp</dimen>
 <dimen name="qb_px_50">19.95dp</dimen>
 <dimen name="qb_px_51">20.35dp</dimen>
