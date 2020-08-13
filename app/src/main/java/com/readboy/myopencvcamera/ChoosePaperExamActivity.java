@@ -45,7 +45,7 @@ public class ChoosePaperExamActivity extends BaseActivity {
         paperAdapter.setOnItemClick(new ChoosePaperAdapter.OnItemClick() {
             @Override
             public void onItemClick(int position) {
-                Intent intent = new Intent(ChoosePaperExamActivity.this,MainActivity.class);
+                Intent intent = new Intent(ChoosePaperExamActivity.this,TakePhotoActivity.class);
                 intent.putExtra("paperPage",position);
                 startActivity(intent);
             }

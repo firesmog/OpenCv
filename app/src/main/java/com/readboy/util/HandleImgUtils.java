@@ -1,7 +1,12 @@
 package com.readboy.util;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+
+import com.readboy.bean.newexam.RectangleInfo;
 import com.readboy.log.LogUtils;
 
+import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -36,6 +41,91 @@ public class HandleImgUtils {
 	// 私有化构造函数
 	private HandleImgUtils() {
 	};
+
+	public static Mat processImage(Mat gray, Context context) {
+		Mat frame = new Mat();
+		Imgproc.cvtColor(gray,frame,Imgproc. COLOR_RGBA2RGB);
+		Mat src = GrayUtils.grayNative(frame);
+		BitmapUtils.savePicAsBitmap(src,context,100);
+		src = BinaryUtils.binaryNative(src,0,0);
+		BitmapUtils.savePicAsBitmap(src,context,102);
+		return src;
+	}
+
+	public static List<Point> getCornersByContour(Mat imgsource){
+		List<MatOfPoint> contours=new ArrayList<>();
+		//轮廓检测
+		Imgproc.findContours(imgsource,contours,new Mat(),Imgproc.RETR_EXTERNAL,Imgproc.CHAIN_APPROX_SIMPLE);
+		LogUtils.d("findContours size = " + contours.size());
+		double maxArea= 20;
+		MatOfPoint temp_contour= contours.get(0);//假设最大的轮廓在index=0处
+		MatOfPoint2f approxCurve=new MatOfPoint2f();
+		for (int idx=0;idx<contours.size();idx++){
+			temp_contour=contours.get(idx);
+			double contourarea=Imgproc.contourArea(temp_contour);
+			if(  contourarea < 6000){
+				continue;
+			}
+			LogUtils.d("findContours area = " + contourarea);
+			//当前轮廓面积比最大的区域面积大就检测是否为四边形
+			if (contourarea > maxArea){
+				//检测contour是否是四边形
+				MatOfPoint2f new_mat=new MatOfPoint2f(temp_contour.toArray());
+				MatOfPoint2f approxCurve_temp=new MatOfPoint2f();
+				//对图像轮廓点进行多边形拟合
+				Imgproc.approxPolyDP(new_mat,approxCurve_temp,0.01 * Imgproc.arcLength(new_mat, true),true);
+				LogUtils.d("findContours22222 area = " + approxCurve_temp.total()  +", length = " +  0.01 * Imgproc.arcLength(new_mat, true));
+
+				if (approxCurve_temp.total() == 4 ){
+					maxArea=contourarea;
+					approxCurve=approxCurve_temp;
+					LogUtils.d("findContours22222 area = " + contourarea);
+				}
+			}
+		}
+		LogUtils.d("findContours area max  = " + maxArea);
+		return BitmapUtils.getImagePoint(approxCurve);
+	}
+
+	//处理矩形矫正（test pass）
+	public static RectangleInfo dealRectangleCorrect(Mat frame,Context context){
+		Mat frameData = HandleImgUtils.processImage(frame,context);
+		Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
+		Utils.matToBitmap(frameData, bitmap);
+		Mat edge=new Mat();
+		Imgproc.Canny(frameData,edge,90,270,5,true);
+		Utils.matToBitmap(edge, bitmap);
+		BitmapUtils.saveImageToGallery(bitmap,context,7777);
+		List<Point> points = HandleImgUtils.getCornersByContour(edge);
+		for (Point point : points) {
+			LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
+		}
+
+		Mat srcPoints = Converters.vector_Point_to_Mat(points, CvType.CV_32F);
+		final Point leftTop = points.get(0);
+		Point righttop=points.get(1);
+		Point leftbottom=points.get(2);
+		Point rightbottom=points.get(3);
+
+		List<Point> dst = new ArrayList<>();
+		double MinX =  Math.min(leftTop.x, leftbottom.x);
+		double MaxX =  Math.max(righttop.x, rightbottom.x);
+		double MinY =  Math.min(leftTop.y, righttop.y);
+		double MaxY =  Math.max(leftbottom.y, rightbottom.y);
+		dst.add(new Point(MinX,MinY));
+		dst.add(new Point(MaxX,MinY));
+		dst.add(new Point(MinX,MaxY));
+		dst.add(new Point(MaxX,MaxY));
+		Mat dstPoints = Converters.vector_Point_to_Mat(dst, CvType.CV_32F);
+		Mat perspectiveMat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
+		Mat result = new Mat();
+		Imgproc.warpPerspective(frame, result, perspectiveMat, frame.size(),Imgproc.INTER_LANCZOS4 );
+		Utils.matToBitmap(result,bitmap);
+		RectangleInfo info = new RectangleInfo();
+		info.setBitmap(bitmap);
+		info.setPoints(dst);
+		return info;
+	}
 
 	/**
 	 * 输入图像路径，返回mat矩阵
