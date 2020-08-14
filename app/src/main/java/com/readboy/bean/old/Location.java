@@ -7,7 +7,7 @@ public class Location {
     public Location() {
     }
 
-    public Location(Point right_bottom, Point top_left) {
+    public Location(Point top_left,Point right_bottom) {
         this.right_bottom = right_bottom;
         this.top_left = top_left;
     }

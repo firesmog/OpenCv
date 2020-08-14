@@ -27,7 +27,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -60,7 +59,6 @@ import com.readboy.bean.old.Location;
 import com.readboy.log.LogUtils;
 import com.readboy.net.HttpUtil;
 import com.readboy.net.NetUtil;
-import com.readboy.net.RxDisposeManager;
 import com.readboy.net.bean.BaseResponse;
 import com.readboy.net.bean.Line;
 import com.readboy.net.bean.Word;
@@ -80,10 +78,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Stack;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
-import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
 
 @SuppressLint("NewApi")
 
@@ -163,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 mOpenCvCameraView.setAutoFocus();
             }
         });
-        llShow = (RelativeLayout) findViewById(R.id.iv_show);
+        llShow = (RelativeLayout) findViewById(R.id.ll_show);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         DisplayMetrics outMetrics = new DisplayMetrics();
@@ -930,7 +926,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             String bodyParam = "image=" + imageBase64;
             LogUtils.d("result == " + "body size = " + imageByteArray.length);
 
-            final String result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam);
+            final String result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam,1);
             LogUtils.d("result == " + result);
             switch (type){
                 case 10001:

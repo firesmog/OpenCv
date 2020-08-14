@@ -18,7 +18,7 @@ public class DeviceUtil {
     public static ExamBean getExamData(Context context){
         ExamBean data = null;
         try {
-            String question = context.getResources().getString(R.string.json_new_data_g);
+            String question = context.getResources().getString(R.string.json_new_data_e);
             question = replaceBlank(question);
             question = question.replace("\\", "");
             question = question.replace("\n", "");
@@ -59,4 +59,13 @@ public class DeviceUtil {
         }
         return result.toString();
     }
+
+    /**
+     * 根据手机的分辨率从 dp 的单位 转成为 px(像素)
+     */
+    public static int dip2px(Context context, float dpValue) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
+    }
+
 }

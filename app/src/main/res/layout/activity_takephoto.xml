@@ -8,63 +8,39 @@
     android:background="@color/color_000000"
     tools:context=".TakePhotoActivity">
 
-    <org.opencv.android.JavaCameraView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/javaCameraView"
-        opencv:show_fps="true"
-        opencv:camera_id="any" />
-
-    <ImageView
-        android:layout_width="@dimen/qb_px_539"
-        android:layout_height="@dimen/qb_px_724"
-        android:background="@mipmap/ic_photo_bg"
-        android:layout_centerInParent="true"
+    <include
+        android:id="@+id/include_take_photo"
+        layout="@layout/include_take_photo"
         />
-
-    <ImageView
-        android:id="@+id/iv_cancel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="@dimen/qb_px_150"
-        android:layout_marginEnd="@dimen/qb_px_72"
-        android:background="@mipmap/ic_cancel_gray"
-        />
-
-    <ImageView
-        android:id="@+id/iv_take_photo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@id/iv_cancel"
-        android:layout_marginTop="@dimen/qb_px_70"
-        android:layout_marginEnd="@dimen/qb_px_52"
-        android:background="@mipmap/ic_photo"
-        />
-
-    <ImageView
-        android:id="@+id/iv_from_album"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@id/iv_take_photo"
-        android:layout_marginTop="@dimen/qb_px_70"
-        android:layout_marginEnd="@dimen/qb_px_72"
-        android:background="@mipmap/ic_album"
-        />
-
 
 
     <RelativeLayout
-        android:id="@+id/iv_show"
-        android:visibility="gone"
+        android:id="@+id/ll_analyzing"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorAccent"
+        android:visibility="gone"
         >
+
+        <RelativeLayout
+            android:id="@+id/ll_show_result"
+            android:layout_width="@dimen/qb_px_750"
+            android:layout_height="match_parent"
+            >
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_toEndOf="@id/ll_show_result"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@mipmap/ic_launcher"
+            >
+
+        </RelativeLayout>
+
     </RelativeLayout>
+
+
 
 
 </RelativeLayout>
