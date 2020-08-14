@@ -92,20 +92,26 @@ public class HandleImgUtils {
 		return BitmapUtils.getImagePoint(approxCurve);
 	}
 
-	//处理矩形矫正（test pass）
-	public static RectangleInfo dealRectangleCorrect(Mat frame,Context context){
+
+	public static  RectangleInfo getRectangle(Mat frame,Context context){
 		Mat frameData = HandleImgUtils.processImage(frame,context);
 		Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
-		Utils.matToBitmap(frameData, bitmap);
 		Mat edge=new Mat();
 		Imgproc.Canny(frameData,edge,90,270,5,true);
-		Utils.matToBitmap(edge, bitmap);
-		BitmapUtils.saveImageToGallery(bitmap,context,7777);
 		List<Point> points = HandleImgUtils.getCornersByContour(edge);
 		for (Point point : points) {
 			LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
 		}
+		RectangleInfo info = new RectangleInfo();
+		info.setPoints(points);
+		info.setBitmap(bitmap);
+		return info;
+	}
 
+	//处理矩形矫正（test pass）
+	public static RectangleInfo dealRectangleCorrect(Mat frame,RectangleInfo info,Context context){
+		List<Point> points = info.getPoints();
+		Bitmap bitmap = info.getBitmap();
 		Mat srcPoints = Converters.vector_Point_to_Mat(points, CvType.CV_32F);
 		final Point leftTop = points.get(0);
 		Point righttop=points.get(1);
@@ -126,7 +132,6 @@ public class HandleImgUtils {
 		Mat result = new Mat();
 		Imgproc.warpPerspective(frame, result, perspectiveMat, frame.size(),Imgproc.INTER_LANCZOS4 );
 		Utils.matToBitmap(result,bitmap);
-		RectangleInfo info = new RectangleInfo();
 		info.setBitmap(bitmap);
 		info.setPoints(dst);
 		return info;

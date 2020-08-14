@@ -105,6 +105,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private RelativeLayout llResult;
     private RelativeLayout llInclude;
     private List<Boolean> results = new ArrayList<>();
+    private long before;
 
 
     @Override
@@ -242,14 +243,12 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             // 1. 创建被观察者 & 生产事件
             @Override
             public void subscribe(ObservableEmitter<RectangleInfo> emitter) {
-                final RectangleInfo info = HandleImgUtils.dealRectangleCorrect(frame,TakePhotoActivity.this);
-                final Bitmap bitmap = info.getBitmap();
-                BitmapUtils.saveImageToGallery(bitmap,TakePhotoActivity.this,9977);
-                emitter.onNext(info);
+                final RectangleInfo value = HandleImgUtils.getRectangle(frame,TakePhotoActivity.this);
+                emitter.onNext(value);
                 emitter.onComplete();
             }
         })
-                //.subscribeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<RectangleInfo>() {
 
@@ -259,7 +258,8 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             }
 
             @Override
-            public void onNext(final RectangleInfo value) {
+            public void onNext(final RectangleInfo info) {
+                final RectangleInfo value = HandleImgUtils.dealRectangleCorrect(frame,info,TakePhotoActivity.this);
                 llInclude.setVisibility(View.VISIBLE);
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
