@@ -2,7 +2,9 @@ package com.readboy.myopencvcamera;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -17,10 +19,20 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.app.hubert.guide.NewbieGuide;
+import com.app.hubert.guide.model.GuidePage;
+import com.readboy.adapter.ChoosePaperAdapter;
+import com.readboy.adapter.GuideAdapter;
 import com.readboy.bean.newexam.Answer;
 import com.readboy.bean.newexam.Children;
 import com.readboy.bean.newexam.ChildrenQuestion;
+import com.readboy.bean.newexam.ChooseTestBean;
 import com.readboy.bean.newexam.ExamBean;
+import com.readboy.bean.newexam.GuideBean;
 import com.readboy.bean.newexam.RectangleInfo;
 import com.readboy.bean.old.Location;
 import com.readboy.log.LogUtils;
@@ -106,6 +118,10 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private RelativeLayout llInclude;
     private List<Boolean> results = new ArrayList<>();
     private long before;
+    private RecyclerView rvGuide;
+    private GuideAdapter guideAdapter;
+    private List<GuideBean> paperList = new ArrayList<>();
+    private RelativeLayout llAnswer;
 
 
     @Override
@@ -169,9 +185,11 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private void initView(){
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mOpenCvCameraView = (JavaCameraView) findViewById(R.id.javaCameraView);
+        rvGuide = (RecyclerView) findViewById(R.id.rv_choose_guide);
         llShow = (RelativeLayout) findViewById(R.id.ll_show);
         llInclude = (RelativeLayout) findViewById(R.id.include_take_photo);
         llAnalyze = (RelativeLayout) findViewById(R.id.ll_analyzing);
+        llAnswer = (RelativeLayout) findViewById(R.id.ll_show_answer);
         llResult = (RelativeLayout) findViewById(R.id.ll_show_result);
         ivCancel = (ImageView) findViewById(R.id.iv_cancel);
         ivPhoto = (ImageView) findViewById(R.id.iv_take_photo);
@@ -190,6 +208,46 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             llHeight = outMetrics.heightPixels + 72;
         }
         Toast.makeText(this,getString(R.string.string_photo_tip),Toast.LENGTH_LONG).show();
+    }
+
+    private void initGuideRecycleView(){
+        LinearLayoutManager layoutManager= new LinearLayoutManager(this);
+        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);//设置为横向排列
+        rvGuide.setLayoutManager(layoutManager);
+        getGuideData();
+        guideAdapter = new GuideAdapter(paperList,this);
+        rvGuide.setAdapter(guideAdapter);
+        guideAdapter.setOnItemClick(new GuideAdapter.OnItemClick() {
+            @Override
+            public void onItemClick(int position) {
+            }
+        });
+
+        llResult.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                NewbieGuide.with(TakePhotoActivity.this)
+                        .setLabel("guide1")
+//                        .setShowCounts(3)//控制次数
+                        .alwaysShow(true)//总是显示，调试时可以打开
+                        .addGuidePage(GuidePage.newInstance()
+                                .setBackgroundColor(getResources().getColor(R.color.color_66000000))
+                                .addHighLight(llAnswer)
+                                .addHighLight(new RectF(0, 800, 200, 1200))
+                                /*.setLayoutRes(R.layout.view_guide_simple)*/)
+                        .show();
+            }
+        });
+    }
+
+    private void getGuideData(){
+        for(int i = 0; i < 6; i++) {
+            if(i == 0 ){
+                paperList.add(new GuideBean(i,true));
+            } else {
+                paperList.add(new GuideBean(i,false));
+            }
+        }
     }
 
 
@@ -488,6 +546,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                        llAnalyze.setVisibility(View.VISIBLE);
                        AnimatorUtil.endUpAndDownAnimator();
                        llResult.setBackground(new BitmapDrawable(getResources(),bitmapShow));
+                       initGuideRecycleView();
                    }
                }
            });

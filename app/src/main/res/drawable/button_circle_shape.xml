@@ -1,0 +1,51 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <selector xmlns:android="http://schemas.android.com/apk/res/android">
+            <item android:state_pressed="true">
+                <shape android:shape="oval">
+                    <!--边框角度-->
+                    <corners android:radius="10dip" />
+                    <!--外边框颜色-->
+                    <solid android:color="@color/color_0095ff" />
+                </shape>
+            </item>
+            <item android:state_pressed="false">
+                <shape android:shape="oval">
+                    <!--边框角度-->
+                    <corners android:radius="10dip" />
+                    <!--外边框颜色-->
+                    <solid android:color="@color/color_0095ff" />
+
+                </shape>
+            </item>
+        </selector>
+    </item>
+    <!--离边框的厚度-->
+    <item
+        android:bottom="3dp"
+        android:left="3dp"
+        android:right="3dp"
+        android:top="3dp">
+
+        <selector>
+            <item android:state_pressed="true">
+                <shape android:shape="oval">
+                    <!--边框角度-->
+                    <corners android:radius="10dip" />
+                    <!--外边框颜色，这个为内部颜色-->
+                    <solid android:color="@color/color_0095ff" />
+                </shape>
+            </item>
+            <item android:state_pressed="false">
+                <shape android:shape="oval">
+                    <!--边框角度-->
+                    <corners android:radius="10dip" />
+                    <!--外边框颜色，这个为内部颜色-->
+                    <solid android:color="@color/color_f4edd5" />
+                </shape>
+            </item>
+        </selector>
+
+    </item>
+</layer-list>
+

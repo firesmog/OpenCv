@@ -36,6 +36,18 @@
             android:layout_height="match_parent"
             android:background="@mipmap/ic_launcher"
             >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/qb_px_64"
+                android:background="@color/color_f4edd5"
+                android:layout_alignParentTop="true"
+                android:gravity="center_horizontal"
+                >
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_choose_guide"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"/>
+            </LinearLayout>
 
         </RelativeLayout>
 

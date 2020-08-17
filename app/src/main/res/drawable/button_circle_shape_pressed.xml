@@ -1,0 +1,26 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <!--边框角度-->
+            <corners android:radius="10dip" />
+            <!--外边框颜色-->
+            <solid android:color="@color/color_0095ff" />
+        </shape>
+    </item>
+    <!--离边框的厚度-->
+    <item
+        android:bottom="3dp"
+        android:left="3dp"
+        android:right="3dp"
+        android:top="3dp">
+
+        <shape android:shape="oval">
+            <!--边框角度-->
+            <corners android:radius="10dip" />
+            <!--外边框颜色，这个为内部颜色-->
+            <solid android:color="@color/color_0095ff" />
+        </shape>
+
+    </item>
+</layer-list>
+
