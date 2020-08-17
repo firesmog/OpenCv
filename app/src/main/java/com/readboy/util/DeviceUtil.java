@@ -18,7 +18,7 @@ public class DeviceUtil {
     public static ExamBean getExamData(Context context){
         ExamBean data = null;
         try {
-            String question = context.getResources().getString(R.string.json_new_data_e);
+            String question = context.getResources().getString(R.string.json_answer_a);
             question = replaceBlank(question);
             question = question.replace("\\", "");
             question = question.replace("\n", "");

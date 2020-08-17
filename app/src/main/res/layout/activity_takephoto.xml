@@ -23,13 +23,14 @@
 
         <RelativeLayout
             android:id="@+id/ll_show_result"
-            android:layout_width="@dimen/qb_px_750"
+            android:layout_width="@dimen/qb_px_496"
             android:layout_height="match_parent"
             >
 
         </RelativeLayout>
 
         <RelativeLayout
+            android:id="@+id/ll_show_answer"
             android:layout_toEndOf="@id/ll_show_result"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

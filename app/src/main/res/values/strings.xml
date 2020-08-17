@@ -39,7 +39,7 @@
 			"rightBottomX": 594,
 			"rightBottomY": 140,
 			"answer": [{
-				"content": "apple",
+				"content": "___________________________",
 				"width": 240,
 				"height": 20,
 				"leftTopX": 28,
@@ -47,7 +47,7 @@
 				"rightBottomX": 268,
 				"rightBottomY": 40
 			}, {
-				"content": "pear",
+				"content": "___________________________",
 				"width": 240,
 				"height": 20,
 				"leftTopX": 306,
@@ -55,7 +55,7 @@
 				"rightBottomX": 546,
 				"rightBottomY": 40
 			}, {
-				"content": "watermelon",
+				"content": "___________________________",
 				"width": 240,
 				"height": 20,
 				"leftTopX": 28,
@@ -63,7 +63,7 @@
 				"rightBottomX": 268,
 				"rightBottomY": 80
 			}, {
-				"content": "banana",
+				"content": "___________________________",
 				"width": 240,
 				"height": 20,
 				"leftTopX": 306,
@@ -92,7 +92,7 @@
 			"answer": []
 		}, {
 			"type": "question",
-			"content": "1. 13里面的“3”在个位上，表示 ______ 个 ______ ；“1”在十位上，表示 ______ 个 ______ 。",
+			"content": "1. 一双布鞋的售价是25.6元，一双皮鞋比一双布鞋贵216.5元。爸爸买了一双布鞋和一双皮鞋，付了300元，应找回 ______ 元。",
 			"width": 594,
 			"height": 96,
 			"leftTopX": 0,
@@ -100,41 +100,17 @@
 			"rightBottomX": 594,
 			"rightBottomY": 156,
 			"answer": [{
-				"content": "3",
+				"content": "32.3",
 				"width": 53,
 				"height": 30,
-				"leftTopX": 284,
-				"leftTopY": 18,
-				"rightBottomX": 337,
-				"rightBottomY": 48
-			}, {
-				"content": "1",
-				"width": 53,
-				"height": 30,
-				"leftTopX": 391,
-				"leftTopY": 18,
-				"rightBottomX": 444,
-				"rightBottomY": 48
-			}, {
-				"content": "1",
-				"width": 53,
-				"height": 30,
-				"leftTopX": 89,
+				"leftTopX": 329,
 				"leftTopY": 48,
-				"rightBottomX": 142,
-				"rightBottomY": 78
-			}, {
-				"content": "10",
-				"width": 53,
-				"height": 30,
-				"leftTopX": 196,
-				"leftTopY": 48,
-				"rightBottomX": 249,
+				"rightBottomX": 382,
 				"rightBottomY": 78
 			}]
 		}, {
 			"type": "question",
-			"content": "2. 配制一种农药，药粉和水的比是1:500，现有药粉3.6千克，配制这种农药需要水 ______ 千克。",
+			"content": "2. 小文和小丽同时买了相同的一支铅笔，15天后小文用去3.03厘米，小丽用去2.45厘米。现在两支铅笔相差 ______ 厘米。",
 			"width": 594,
 			"height": 97,
 			"leftTopX": 0,
@@ -142,12 +118,12 @@
 			"rightBottomX": 594,
 			"rightBottomY": 253,
 			"answer": [{
-				"content": "1800",
+				"content": "0.58",
 				"width": 53,
 				"height": 30,
-				"leftTopX": 89,
+				"leftTopX": 284,
 				"leftTopY": 48,
-				"rightBottomX": 142,
+				"rightBottomX": 337,
 				"rightBottomY": 78
 			}]
 		}]
@@ -171,39 +147,39 @@
 			"answer": []
 		}, {
 			"type": "question",
-			"content": "1.某种商品的进价为a元/件，在销售旺季，商品售价较进价高30%；销售旺季过后，商品又以7折（即原售价的70%）的价格开展促销活动，这时一件该商品的售价为 (  ) 。\n\nA. a元\n\nB. 0.7a元\n\nC. 0.91a元\n\nD. 1.03a元",
+			"content": "1.有三袋食盐，其中2袋各500克，另一袋不是500克，但不知比500克轻还是重。用天平至少称 (  ) 次才能保证找出这袋食盐来。\n\nA. 1\n\nB. 2\n\nC. 3\n\nD. 4",
 			"width": 594,
-			"height": 278,
+			"height": 248,
 			"leftTopX": 0,
 			"leftTopY": 60,
 			"rightBottomX": 594,
-			"rightBottomY": 338,
+			"rightBottomY": 308,
 			"answer": [{
-				"content": "C",
+				"content": "B",
 				"width": 53,
 				"height": 30,
-				"leftTopX": 124,
-				"leftTopY": 78,
-				"rightBottomX": 177,
-				"rightBottomY": 108
+				"leftTopX": 160,
+				"leftTopY": 48,
+				"rightBottomX": 213,
+				"rightBottomY": 78
 			}]
 		}, {
 			"type": "question",
-			"content": "2.11个橘子分给3个小朋友，不要求每个小朋友分得的橘子一样多，但要求分得的橘子个数是单数。想一想，能分吗，请选出正确的选项 (  ) 。\n\nA. 能\n\nB. 不能\n\nC. 不确定",
+			"content": "2.有6颗外观一样的铁球，其中有5颗一样重，另外一颗比其他5颗稍微轻一些，如果用天平称2次就保证找出这颗稍轻的铁球，下列分法中正确的是 (  ) 。\n\nA. 按（2，2，2）分成三份\n\nB. 按（3，3）分成两份\n\nC. A，B两种方法都正确",
 			"width": 594,
-			"height": 210,
+			"height": 240,
 			"leftTopX": 0,
-			"leftTopY": 338,
+			"leftTopY": 308,
 			"rightBottomX": 594,
 			"rightBottomY": 548,
 			"answer": [{
-				"content": "A",
+				"content": "B",
 				"width": 53,
 				"height": 30,
-				"leftTopX": 498,
-				"leftTopY": 48,
-				"rightBottomX": 551,
-				"rightBottomY": 78
+				"leftTopX": 0,
+				"leftTopY": 78,
+				"rightBottomX": 53,
+				"rightBottomY": 108
 			}]
 		}]
 	}]

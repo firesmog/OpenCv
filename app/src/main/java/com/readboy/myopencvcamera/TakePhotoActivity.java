@@ -183,7 +183,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         mOpenCvCameraView.setCvCameraViewListener(this);
         DisplayMetrics outMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
-        llWidth = DeviceUtil.dip2px(this,750);
+        llWidth = DeviceUtil.dip2px(this,496);
         if(PhoneTypeUtil.SYS_EMUI.equals(PhoneTypeUtil.getSystem())){
             llHeight = outMetrics.heightPixels ;
         }else {
@@ -689,7 +689,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         String answerResult = "";
         StringBuilder contentBuilder = new StringBuilder();
         for (Word word : words) {
-            contentBuilder.append(word);
+            contentBuilder.append(word.getContent());
         }
         String content = contentBuilder.toString();
 
