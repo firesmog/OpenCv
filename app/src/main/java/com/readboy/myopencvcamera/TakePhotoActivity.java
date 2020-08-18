@@ -16,29 +16,23 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.app.hubert.guide.NewbieGuide;
-import com.app.hubert.guide.model.GuidePage;
-import com.readboy.adapter.ChoosePaperAdapter;
 import com.readboy.adapter.GuideAdapter;
 import com.readboy.bean.newexam.Answer;
 import com.readboy.bean.newexam.Children;
 import com.readboy.bean.newexam.ChildrenQuestion;
-import com.readboy.bean.newexam.ChooseTestBean;
 import com.readboy.bean.newexam.ExamBean;
 import com.readboy.bean.newexam.GuideBean;
+import com.readboy.bean.newexam.QuestionInfo;
 import com.readboy.bean.newexam.RectangleInfo;
 import com.readboy.bean.old.Location;
 import com.readboy.log.LogUtils;
 import com.readboy.net.HttpUtil;
 import com.readboy.net.NetUtil;
-import com.readboy.net.RxDisposeManager;
 import com.readboy.net.bean.BaseResponse;
 import com.readboy.net.bean.Line;
 import com.readboy.net.bean.Word;
@@ -49,6 +43,7 @@ import com.readboy.util.GsonUtil;
 import com.readboy.util.HandleImgUtils;
 import com.readboy.util.PhoneTypeUtil;
 import com.readboy.util.PhotoUtil;
+import com.readboy.widgest.GuideLayout;
 
 import org.apache.commons.codec.binary.Base64;
 import org.opencv.android.CameraBridgeViewBase;
@@ -60,11 +55,8 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -75,12 +67,10 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-import static android.os.SystemClock.sleep;
 import static com.readboy.net.NetUtil.WEBOCR_URL;
 
 
@@ -97,6 +87,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private ImageView ivCancel;
     private ImageView ivScan;
     private boolean stoped;
+    private List<QuestionInfo> questionInfoList = new ArrayList<>();
 
 
     Handler handler=new Handler();
@@ -122,6 +113,9 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private GuideAdapter guideAdapter;
     private List<GuideBean> paperList = new ArrayList<>();
     private RelativeLayout llAnswer;
+    private GuideLayout glChoose;
+    private int i;
+    private int j = 0;
 
 
     @Override
@@ -190,6 +184,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         llInclude = (RelativeLayout) findViewById(R.id.include_take_photo);
         llAnalyze = (RelativeLayout) findViewById(R.id.ll_analyzing);
         llAnswer = (RelativeLayout) findViewById(R.id.ll_show_answer);
+        glChoose = (GuideLayout) findViewById(R.id.gl_click_choose);
         llResult = (RelativeLayout) findViewById(R.id.ll_show_result);
         ivCancel = (ImageView) findViewById(R.id.iv_cancel);
         ivPhoto = (ImageView) findViewById(R.id.iv_take_photo);
@@ -222,22 +217,24 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             public void onItemClick(int position) {
             }
         });
-
-        llResult.setOnClickListener(new View.OnClickListener() {
+        i = 0;
+        llAnswer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                NewbieGuide.with(TakePhotoActivity.this)
-                        .setLabel("guide1")
-//                        .setShowCounts(3)//控制次数
-                        .alwaysShow(true)//总是显示，调试时可以打开
-                        .addGuidePage(GuidePage.newInstance()
-                                .setBackgroundColor(getResources().getColor(R.color.color_66000000))
-                                .addHighLight(llAnswer)
-                                .addHighLight(new RectF(0, 800, 200, 1200))
-                                /*.setLayoutRes(R.layout.view_guide_simple)*/)
-                        .show();
+                glChoose.setVisibility(View.VISIBLE);
             }
         });
+        glChoose.setListener(new GuideLayout.OnGuideViewClickListener() {
+            @Override
+            public void onClickHighLightArea(float posX, float posY) {
+                QuestionInfo info = DeviceUtil.getClickQuestionFromRect(questionInfoList,posX,posY);
+                if(null != info){
+                    glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
+                }
+            }
+
+        });
+
     }
 
     private void getGuideData(){
@@ -270,7 +267,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private void scanRectangleArea(Mat frame, Context context){
         Mat frameData = HandleImgUtils.processImage(frame,context);
         Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
-        Mat edge=new Mat();
+        Mat edge = new Mat();
         Imgproc.Canny(frameData,edge,90,270,5,true);
         Utils.matToBitmap(edge, bitmap);
         BitmapUtils.saveImageToGallery(bitmap,context,7777);
@@ -372,6 +369,8 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         double gapWidth = width2 - width;
         final double ratioHeight  = height/examHeight ;
         final double ratioWidth = width/examWidth;
+        questionInfoList = DeviceUtil.getQuestionInfoList(data,1.0d*llWidth/examWidth,1.0d*llHeight/examHeight);
+
         LogUtils.d("ratioWidth leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth + "ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight
         + ",gap = " + gapWidth);
         //todo 展示分析界面
@@ -437,7 +436,6 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             pointScrop.add(new Point(Math.max(( realQuestionLeftTop.getX()*ratioWidth)  -2.2*marginMore,1),Math.min(realQuestionRightBottom.getY()*ratioHeight  + 1.2*marginMore ,bitmap.getHeight())));
             pointScrop.add(new Point(Math.min(( realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(realQuestionRightBottom.getY()*ratioHeight   + 1.2*marginMore ,bitmap.getHeight())));
             Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
-            BitmapUtils.saveImageToGallery(stretch,this,6660 +  j);
             doNetRequest(stretch,bitmap,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType(),null,answer);
         }
     }

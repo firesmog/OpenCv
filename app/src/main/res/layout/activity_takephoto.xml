@@ -29,6 +29,16 @@
 
         </RelativeLayout>
 
+        <com.readboy.widgest.GuideLayout
+            android:id="@+id/gl_click_choose"
+            android:layout_width="@dimen/qb_px_496"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+           >
+
+        </com.readboy.widgest.GuideLayout>
+
+
         <RelativeLayout
             android:id="@+id/ll_show_answer"
             android:layout_toEndOf="@id/ll_show_result"
