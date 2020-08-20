@@ -1,14 +1,18 @@
 package com.readboy.myopencvcamera;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -18,6 +22,10 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -39,10 +47,12 @@ import com.readboy.net.bean.Word;
 import com.readboy.util.AnimatorUtil;
 import com.readboy.util.BitmapUtils;
 import com.readboy.util.DeviceUtil;
+import com.readboy.util.FileUtil;
 import com.readboy.util.GsonUtil;
 import com.readboy.util.HandleImgUtils;
 import com.readboy.util.PhoneTypeUtil;
 import com.readboy.util.PhotoUtil;
+import com.readboy.widgest.CenterLayoutManager;
 import com.readboy.widgest.GuideLayout;
 
 import org.apache.commons.codec.binary.Base64;
@@ -54,6 +64,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.ByteArrayOutputStream;
@@ -62,6 +73,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -70,6 +82,7 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import okio.Timeout;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
 
@@ -87,6 +100,8 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private ImageView ivCancel;
     private ImageView ivScan;
     private boolean stoped;
+    public static final int RC_CHOOSE_PHOTO = 3344;
+
     private List<QuestionInfo> questionInfoList = new ArrayList<>();
 
 
@@ -114,8 +129,8 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private List<GuideBean> paperList = new ArrayList<>();
     private RelativeLayout llAnswer;
     private GuideLayout glChoose;
-    private int i;
-    private int j = 0;
+    private int j = 1;
+    private CenterLayoutManager centerLayoutManager;
 
 
     @Override
@@ -206,18 +221,22 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     }
 
     private void initGuideRecycleView(){
-        LinearLayoutManager layoutManager= new LinearLayoutManager(this);
-        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);//设置为横向排列
-        rvGuide.setLayoutManager(layoutManager);
+        centerLayoutManager = new CenterLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        rvGuide.setLayoutManager(centerLayoutManager);
         getGuideData();
         guideAdapter = new GuideAdapter(paperList,this);
         rvGuide.setAdapter(guideAdapter);
         guideAdapter.setOnItemClick(new GuideAdapter.OnItemClick() {
             @Override
             public void onItemClick(int position) {
+                if(position  >= questionInfoList.size()){
+                    return;
+                }
+                QuestionInfo info = questionInfoList.get(position);
+                glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
             }
         });
-        i = 0;
+
         llAnswer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -230,6 +249,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 QuestionInfo info = DeviceUtil.getClickQuestionFromRect(questionInfoList,posX,posY);
                 if(null != info){
                     glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
+                    guideAdapter.setItemSelect(info.getQueNum() - 1);
                 }
             }
 
@@ -238,11 +258,11 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     }
 
     private void getGuideData(){
-        for(int i = 0; i < 6; i++) {
+        for(int i = 0; i < questionInfoList.size(); i++) {
             if(i == 0 ){
-                paperList.add(new GuideBean(i,true));
+                paperList.add(new GuideBean(1,true));
             } else {
-                paperList.add(new GuideBean(i,false));
+                paperList.add(new GuideBean(questionInfoList.get(i).getQueNum(),false));
             }
         }
     }
@@ -253,14 +273,66 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.iv_cancel:
+                finish();
                 break;
             case R.id.iv_take_photo:
                 mOpenCvCameraView.cancelAutoFocus();
                 savePictureAccordExam(mRgba);
                 break;
             case R.id.iv_from_album:
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    //未授权，申请授权(从相册选择图片需要读取存储卡的权限)
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_CHOOSE_PHOTO);
+                } else {
+                    //已授权，获取照片
+                    choosePhoto();
+                }
                 break;
         }
+    }
+
+    /**
+     权限申请结果回调
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case RC_CHOOSE_PHOTO:   //相册选择照片权限申请返回
+                choosePhoto();
+                break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case RC_CHOOSE_PHOTO:
+                Uri uri = data.getData();
+                String filePath = FileUtil.getFilePathByUri(this, uri);
+
+                if (!TextUtils.isEmpty(filePath)) {
+                    LogUtils.d("onActivityResult filePath = " + filePath);
+                    Mat photo = Imgcodecs.imread(filePath, Imgcodecs.IMREAD_UNCHANGED);
+                    savePictureAccordExam(photo);
+                    llInclude.setVisibility(View.VISIBLE);
+                    llShow.setVisibility(View.VISIBLE);
+                    mOpenCvCameraView.setVisibility(View.GONE);
+                    Bitmap bitmap = Bitmap.createBitmap(photo.width(), photo.height(), Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(photo,bitmap);
+                    llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
+                    AnimatorUtil.startUpAndDownAnimator(ivScan);
+                }
+                break;
+        }
+    }
+
+
+    private void choosePhoto() {
+        Intent intentToPickPic = new Intent(Intent.ACTION_PICK, null);
+        intentToPickPic.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
+        startActivityForResult(intentToPickPic, RC_CHOOSE_PHOTO);
     }
 
     //处理预览界面的简陋版本
@@ -302,7 +374,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 emitter.onNext(value);
                 emitter.onComplete();
             }
-        })
+        }).timeout(3000, TimeUnit.MILLISECONDS )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<RectangleInfo>() {
@@ -315,7 +387,6 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             @Override
             public void onNext(final RectangleInfo info) {
                 final RectangleInfo value = HandleImgUtils.dealRectangleCorrect(frame,info,TakePhotoActivity.this);
-                llInclude.setVisibility(View.VISIBLE);
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 llShow.setBackground(new BitmapDrawable(getResources(),value.getBitmap()));
@@ -331,10 +402,17 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             @Override
             public void onError(Throwable e) {
                 LogUtils.d("savePictureAccordExam error = " + e.getMessage());
+                Toast.makeText(TakePhotoActivity.this,"当前照片不规范，请重新拍摄",Toast.LENGTH_LONG).show();
+                llShow.setVisibility(View.GONE);
+                mOpenCvCameraView.setVisibility(View.VISIBLE);
+                mOpenCvCameraView.enableView();
+                //finish();
             }
 
             @Override
             public void onComplete() {
+                LogUtils.d("savePictureAccordExam onComplete ");
+
             }
         });
 

@@ -82,6 +82,7 @@ public class GuideLayout extends FrameLayout {
 
 
     public void drawRectangle(Context context,RectF rect,int queType){
+        LogUtils.d("drawRectangle drawRectangle = " + queType );
         this.context = context;
         this.rectF = rect;
         if(curQue == queType){

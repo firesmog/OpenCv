@@ -73,6 +73,15 @@ public class GuideAdapter extends RecyclerView.Adapter<GuideAdapter.ViewHolder> 
         });
     }
 
+
+    public void setItemSelect(int pos){
+        for (GuideBean guideBean : mTestList) {
+            guideBean.setSelect(false);
+        }
+        mTestList.get(pos).setSelect(true);
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemCount() {
         return mTestList.size();

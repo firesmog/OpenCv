@@ -20,6 +20,7 @@ allprojects {
     repositories {
         google()
         maven { url 'https://jitpack.io' }
+        maven { url 'http://repo.dream.cn/release/' }
         jcenter()
         
     }
