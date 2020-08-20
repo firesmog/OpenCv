@@ -89,6 +89,8 @@ public class DeviceUtil {
         return list;
     }
 
+
+
    public static QuestionInfo getClickQuestionFromRect(List<QuestionInfo> list,float posX, float posY){
        for (QuestionInfo questionInfo : list) {
            RectF queLocation = questionInfo.getQueLocation();

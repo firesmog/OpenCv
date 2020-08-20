@@ -52,6 +52,7 @@ import com.readboy.util.GsonUtil;
 import com.readboy.util.HandleImgUtils;
 import com.readboy.util.PhoneTypeUtil;
 import com.readboy.util.PhotoUtil;
+import com.readboy.util.ShowToastUtils;
 import com.readboy.widgest.CenterLayoutManager;
 import com.readboy.widgest.GuideLayout;
 
@@ -217,7 +218,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         }else {
             llHeight = outMetrics.heightPixels + 72;
         }
-        Toast.makeText(this,getString(R.string.string_photo_tip),Toast.LENGTH_LONG).show();
+        ShowToastUtils.showToast(this,getString(R.string.string_photo_tip),Toast.LENGTH_SHORT);
     }
 
     private void initGuideRecycleView(){
@@ -273,7 +274,9 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.iv_cancel:
-                finish();
+                llShow.setVisibility(View.GONE);
+                mOpenCvCameraView.setVisibility(View.VISIBLE);
+                mOpenCvCameraView.enableView();
                 break;
             case R.id.iv_take_photo:
                 mOpenCvCameraView.cancelAutoFocus();
@@ -402,7 +405,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             @Override
             public void onError(Throwable e) {
                 LogUtils.d("savePictureAccordExam error = " + e.getMessage());
-                Toast.makeText(TakePhotoActivity.this,"当前照片不规范，请重新拍摄",Toast.LENGTH_LONG).show();
+                ShowToastUtils.showToast(TakePhotoActivity.this,"当前照片不规范，请重新拍摄",Toast.LENGTH_SHORT);
                 llShow.setVisibility(View.GONE);
                 mOpenCvCameraView.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.enableView();
