@@ -44,9 +44,10 @@
             android:layout_toEndOf="@id/ll_show_result"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/color_fff9e3"
+            android:background="@color/color_cecece"
             >
             <LinearLayout
+                android:id="@+id/ll_guide"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/qb_px_64"
                 android:background="@color/color_f4edd5"
@@ -57,7 +58,15 @@
                     android:id="@+id/rv_choose_guide"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"/>
+
             </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_below="@id/ll_guide"
+                android:id="@+id/rv_answer_analysis"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
 
         </RelativeLayout>
 
