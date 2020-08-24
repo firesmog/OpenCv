@@ -1,0 +1,108 @@
+[{
+	"id": 71583548,
+	"v": 1,
+	"type": 10006,
+	"subject": 2,
+	"content": "<p>直角三角形两锐角的度数分别为x，y，其关系式为y=90﹣x，其中变量为<blk  mlen=\"10\" mstyle=\"underline\" ></blk>，常量为<blk  mlen=\"10\" mstyle=\"underline\" ></blk>．</p>",
+	"accessories": [],
+	"solution": "<p>【解答】解：关系式为y=90﹣x，其中变量为x，y，常量为﹣1，90．<br/>故答案为：x，y；﹣1，90．<br/>【分析】根据在一个变化的过程中，数值发生变化的量称为变量；数值始终不变的量称为常量，即可答题．</p>",
+	"solutionAccessories": [],
+	"keypoint": [{
+		"id": 141054,
+		"name": "常量和变量"
+	}],
+	"section": [{
+		"id": 5088154,
+		"name": "19.1.1　变量与函数",
+		"source": 1921154
+	}],
+	"difficulty": 6,
+	"score": 2,
+	"groupCount": 0,
+	"save": "ZS:Q",
+	"updateTime": "2020-05-25T16:10:25+08:00",
+	"collect": -1,
+	"blank": 2,
+	"answer": ["<p>x，y；</p><p>﹣1，90．</p>", ""]
+}, {
+	"id": 71584548,
+	"v": 1,
+	"type": 10005,
+	"subject": 2,
+	"content": "<p>一般地，在一个变化过程中，如果有两个变量x与y，并且对于x的每一个确定的值，y都有唯一确定的值与其对应，那么就是说x是<blk  mlen=\"8\" mstyle=\"underline\" ></blk>，y是x的<blk  mlen=\"8\" mstyle=\"underline\" ></blk>.</p>",
+	"accessories": [],
+	"solution": "<p>【解答】解：一般地，在一个变化过程中，如果有两个变量x与y，并且对于x的每一个确定的值，y都有唯一确定的值与其对应，那么就是说x是自变量，y是x的函数．<br>故答案为：自变量，函数．<br>【分析】根据函数的定义进行解答．</p>",
+	"solutionAccessories": [],
+	"keypoint": [{
+		"id": 141054,
+		"name": "常量和变量"
+	}],
+	"section": [{
+		"id": 5088154,
+		"name": "19.1.1　变量与函数",
+		"source": 1921154
+	}],
+	"difficulty": 6,
+	"score": 2,
+	"groupCount": 0,
+	"save": "ZS:Q",
+	"updateTime": "2020-05-25T15:18:17+08:00",
+	"collect": -1,
+	"blank": 2,
+	"answer": ["自变量", "函数"]
+}, {
+	"id": 71554548,
+	"v": 1,
+	"type": 10001,
+	"subject": 2,
+	"content": "<p>设路程s，速度v，时间t，在关系式s=vt中，说法正确的是（<blk  mlen=\"4\" ></blk>）</p>",
+	"accessories": [],
+	"solution": "<p>【解答】解：A、当s一定时，s是常量，v、t是变量，故原题说法错误；<br>B、当v一定时，v是常量，t、s是变量，故原题说法错误；<br>C、当t一定时，t是常量，s，v是变量，说法正确；<br>D、当t一定时，t是常量，v、s是变量，故原题说法错误；<br>故选：C．<br>【分析】利用变量和常量的定义：在一个变化的过程中，数值发生变化的量称为变量；数值始终不变的量称为常量进行分析．</p>",
+	"solutionAccessories": [],
+	"keypoint": [{
+		"id": 141054,
+		"name": "常量和变量"
+	}],
+	"section": [{
+		"id": 5088154,
+		"name": "19.1.1　变量与函数",
+		"source": 1921154
+	}],
+	"difficulty": 6,
+	"score": 2,
+	"groupCount": 0,
+	"save": "ZS:Q",
+	"updateTime": "2020-05-25T14:03:02+08:00",
+	"collect": -1,
+	"options": ["当s一定时，v是常量，t是变量", "当v一定时，t是常量，s是变量", "当t一定时，t是常量，s，v是变量", "当t一定时，s是常量，v是变量"],
+	"answer": "2"
+}, {
+	"id": 71574548,
+	"v": 1,
+	"type": 10001,
+	"subject": 2,
+	"content": "<p>生活中太阳能热水器已进入千家万户，你知道吗，在利用太阳能热水器来加热水的过程中，热水器里的水温随着所晒时间的长短而变化，这个问题中因变量是（<blk  mlen=\"4\" ></blk>）</p>",
+	"accessories": [],
+	"solution": "<p>【解答】解：根据函数的定义可知，水温是随着所晒时间的长短而变化，可知水温是因变量，所晒时间为自变量．<br>故选A．<br>【分析】函数的定义：设在某变化过程中有两个变量x、y，如果对于x在某一范围内的每一个确定的值，y都有唯一的值与它对应，那么称y是x的函数，x叫自变量．函数关系式中，某特定的数会随另一个（或另几个）会变动的数的变动而变动，就称为因变量．</p>",
+	"solutionAccessories": [],
+	"keypoint": [{
+		"id": 141054,
+		"name": "常量和变量"
+	}, {
+		"id": 143054,
+		"name": "函数的概念"
+	}],
+	"section": [{
+		"id": 5088154,
+		"name": "19.1.1　变量与函数",
+		"source": 1921154
+	}],
+	"difficulty": 6,
+	"score": 2,
+	"groupCount": 0,
+	"save": "ZS:Q",
+	"updateTime": "2020-05-25T14:12:44+08:00",
+	"collect": -1,
+	"options": ["水的温度", "太阳光强弱", "所晒时间", "热水器"],
+	"answer": "0"
+}]

@@ -798,7 +798,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
 
 
-        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_b),Data.class);
+        Data data = GsonUtil.gsonToBean(getString(R.string.string_ai_correct),Data.class);
         Block[] blocks = data.getBlock();
 
         //修改各个答案显示在照片里的坐标值
@@ -876,7 +876,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     }
 
     public void addView(double ratioWidth , double ratioHeight) {
-        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_c),Data.class);
+        Data data = GsonUtil.gsonToBean(getString(R.string.string_ai_correct),Data.class);
         Block[] blocks = data.getBlock();
         for(int j = 0 ; j< blocks.length ; j++ ){
             RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);

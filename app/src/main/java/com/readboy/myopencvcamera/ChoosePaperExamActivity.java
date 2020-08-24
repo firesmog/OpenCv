@@ -10,9 +10,11 @@ import android.os.Bundle;
 import com.readboy.adapter.ChooseCourseAdapter;
 import com.readboy.adapter.ChoosePaperAdapter;
 import com.readboy.bean.newexam.ChooseTestBean;
+import com.readboy.util.DeviceUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class ChoosePaperExamActivity extends BaseActivity {
     RecyclerView rvCourse;
@@ -30,6 +32,7 @@ public class ChoosePaperExamActivity extends BaseActivity {
         setContentView(R.layout.activity_choose_test_exam);
         initCourseRecycleView();
         initPaperRecycleView();
+
     }
 
     private void initPaperRecycleView(){

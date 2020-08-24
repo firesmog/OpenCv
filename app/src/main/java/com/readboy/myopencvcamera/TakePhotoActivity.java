@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -29,7 +28,9 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.readboy.adapter.AnalysisAdapter;
 import com.readboy.adapter.GuideAdapter;
+import com.readboy.bean.newexam.AnalysisBean;
 import com.readboy.bean.newexam.Answer;
 import com.readboy.bean.newexam.Children;
 import com.readboy.bean.newexam.ChildrenQuestion;
@@ -83,7 +84,6 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import okio.Timeout;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
 
@@ -132,6 +132,11 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private GuideLayout glChoose;
     private int j = 1;
     private CenterLayoutManager centerLayoutManager;
+    private RecyclerView rvAnalysis;
+    private CenterLayoutManager rvAnalysisLayoutManager;
+    private AnalysisAdapter analysisAdapter;
+    private List<AnalysisBean> analysisList = new ArrayList<>();
+    private Answer[] answerListen;
 
 
     @Override
@@ -141,6 +146,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         checkCameraPermission();
         initView();
         setAutoFocusListener();
+
     }
 
 
@@ -196,6 +202,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mOpenCvCameraView = (JavaCameraView) findViewById(R.id.javaCameraView);
         rvGuide = (RecyclerView) findViewById(R.id.rv_choose_guide);
+        rvAnalysis = (RecyclerView) findViewById(R.id.rv_answer_analysis);
         llShow = (RelativeLayout) findViewById(R.id.ll_show);
         llInclude = (RelativeLayout) findViewById(R.id.include_take_photo);
         llAnalyze = (RelativeLayout) findViewById(R.id.ll_analyzing);
@@ -238,12 +245,12 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             }
         });
 
-        llAnswer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                glChoose.setVisibility(View.VISIBLE);
-            }
-        });
+        glChoose.setVisibility(View.VISIBLE);
+        QuestionInfo info = questionInfoList.get(0);
+        if(null != info){
+            glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
+        }
+
         glChoose.setListener(new GuideLayout.OnGuideViewClickListener() {
             @Override
             public void onClickHighLightArea(float posX, float posY) {
@@ -251,11 +258,33 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 if(null != info){
                     glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
                     guideAdapter.setItemSelect(info.getQueNum() - 1);
+                   /* if(info.getQueNum()  > 1 && info.getQueNum() < analysisList.size() + 2 && null != analysisAdapter){
+                        analysisAdapter.setItemSelect(info.getQueNum() - 2);
+                    }*/
                 }
             }
 
         });
 
+    }
+
+    private void initAnswerAnalysisRecycleView(){
+        rvAnalysisLayoutManager = new CenterLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        rvAnalysis.setLayoutManager(rvAnalysisLayoutManager);
+        getAnalysisData();
+        analysisAdapter = new AnalysisAdapter(analysisList,this);
+        rvAnalysis.setAdapter(analysisAdapter);
+        analysisAdapter.setOnItemClick(new AnalysisAdapter.OnItemClick() {
+            @Override
+            public void onItemClick(int position) {
+                if(position  >= questionInfoList.size()){
+                    return;
+                }
+                QuestionInfo info = questionInfoList.get(position + 1);
+                guideAdapter.setItemSelect(position + 1);
+                glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
+            }
+        });
     }
 
     private void getGuideData(){
@@ -267,6 +296,26 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             }
         }
     }
+
+    private void getAnalysisData(){
+        /*List<PaperQuestion> data = DeviceUtil.getAnalysisData("exam_analysis_d.txt",this);
+       for(int i = 0 ; i < data.size(); i++){
+           if(i == 0){
+               analysisList.add(new AnalysisBean(data.get(i),true));
+           }else {
+               analysisList.add(new AnalysisBean(data.get(i),false));
+           }
+       }*/
+
+        for(int i = 0 ; i < 5; i++){
+            if(i == 0){
+                analysisList.add(new AnalysisBean(i,true));
+            }else {
+                analysisList.add(new AnalysisBean(i,false));
+            }
+        }
+    }
+
 
 
 
@@ -442,7 +491,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         double width = Math.min(bottomWidth, topWidth);
         double width2 = Math.max(bottomWidth, topWidth);
 
-        ExamBean data = DeviceUtil.getExamData(this);
+        ExamBean data = DeviceUtil.getExamData("exam_answer_d.txt",this);
         LogUtils.d("getExamData = = " + data.toString()   );
 
         int examHeight = data.getHeight();
@@ -490,7 +539,6 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                     break;
             }
         }
-
     }
 
     private void dealChooseQuestion(Children children, Point leftTop, double ratioWidth , double ratioHeight, final Bitmap bitmap){
@@ -570,11 +618,11 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             com.readboy.bean.old.Point realQuestionRightBottom = new com.readboy.bean.old.Point(realQuestion.getRightBottomX() + parentLeftTop.getX(),realQuestion.getRightBottomY() + parentLeftTop.getY());
             //计算答案坐标，封装到location
             Location[] locations = new Location[realQuestion.getAnswer().size()];
-            Answer answer = new Answer();
+            answerListen = new Answer[locations.length];
             for(int i = 0 ; i < locations.length ; i++){
-                answer = realQuestion.getAnswer().get(i);
-                com.readboy.bean.old.Point answerPoint1 =  new com.readboy.bean.old.Point((int)((answer.getLeftTopX() + parentLeftTop.getX())*ratioWidth),(int)((answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
-                com.readboy.bean.old.Point answerPoint2 =  new com.readboy.bean.old.Point((int)((answer.getRightBottomX() + parentLeftTop.getX())*ratioWidth),(int)((answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
+                answerListen[i] = realQuestion.getAnswer().get(i);
+                com.readboy.bean.old.Point answerPoint1 =  new com.readboy.bean.old.Point((int)((answerListen[i].getLeftTopX() + parentLeftTop.getX())*ratioWidth),(int)((answerListen[i].getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
+                com.readboy.bean.old.Point answerPoint2 =  new com.readboy.bean.old.Point((int)((answerListen[i].getRightBottomX() + parentLeftTop.getX())*ratioWidth),(int)((answerListen[i].getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight));
                 locations[i] = new Location(answerPoint1,answerPoint2);
             }
 
@@ -586,7 +634,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             pointScrop.add(new Point(Math.min(( realQuestionRightBottom.getX()*ratioWidth ) + 2.2* marginMore ,bitmap.getWidth()),Math.min(realQuestionRightBottom.getY()*ratioHeight   + marginMore ,bitmap.getHeight())));
             final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
             BitmapUtils.saveImageToGallery(stretch,this,11111);
-            doNetRequest(stretch,bitmap,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType(),null,answer);
+            doNetRequest(stretch,bitmap,locations,1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),children.getType(),null,answerListen[0]);
         }catch (Exception e){
             LogUtils.e("dealListenQuestion error = " + e.getMessage());
         }
@@ -626,6 +674,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                        AnimatorUtil.endUpAndDownAnimator();
                        llResult.setBackground(new BitmapDrawable(getResources(),bitmapShow));
                        initGuideRecycleView();
+                       initAnswerAnalysisRecycleView();
                    }
                }
            });
@@ -644,65 +693,6 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         } catch (Exception e) {
             LogUtils.d("error = " + e);
         }
-        /*Map<String, String> header = null;
-        String imageBase64 = null;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] imageByteArray = baos.toByteArray();
-
-        try {
-            header = NetUtil.constructHeader("en", "true");
-            imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
-
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        String bodyParam = "image=" + imageBase64;
-        LogUtils.d("result == " + "body size = " + imageByteArray.length);
-
-        HttpUtil.doPost(WEBOCR_URL, header, bodyParam)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<String>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(String result) {
-                        LogUtils.d("doNetRequest onNext " + result);
-                        if(llInclude.getVisibility() == View.VISIBLE){
-                            llInclude.setVisibility(View.GONE);
-                            llAnalyze.setVisibility(View.VISIBLE);
-                            AnimatorUtil.endUpAndDownAnimator();
-                            llResult.setBackground(new BitmapDrawable(getResources(),bitmapShow));
-                        }
-
-                        switch (type){
-                            case 10001:
-                                dealChoose(result,locations[0],ratioWidth,ratioHeight,answer);
-                                break;
-                            case 10006:
-                                dealFillIn(result,location,ratioWidth,ratioHeight,answer);
-                                break;
-                            case 10023:
-                                dealListen(result,locations,ratioWidth,ratioHeight,answer);
-                                break;
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        LogUtils.d("doNetRequest error = " + e.getMessage());
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });*/
 
     }
 
@@ -760,10 +750,9 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                         Word[] words = line.getWord();
                         for (Word word : words) {
                             String content = word.getContent();
-                            String filter2 = content.replaceAll("[\\p{P}‘’“”]","");
-                            if(!TextUtils.isEmpty(filter2) ){
-                                resultFinal = filter2;
-                                LogUtils.d("dealListen line = " + filter2);
+                            if(!TextUtils.isEmpty(content) ){
+                                resultFinal = content;
+                                LogUtils.d("dealListen line = " + content);
                                 break;
                             }
                         }
@@ -790,7 +779,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                     List<Line> list = Arrays.asList(lines);
                     List<Line> lineList = new ArrayList(list);
                     Collections.sort(lineList);
-
+                    int num = 0;
                     for (Line line : lineList) {
                         Word[] words = line.getWord();
                         for (Word word : words) {
@@ -799,12 +788,12 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                             String filter2 = filter1.replaceAll("[\\p{P}‘’“”]","");
 
                             if(!TextUtils.isEmpty(filter2) && !PhotoUtil.isContainChinese(filter2)){
-                                if(filter2.equals(answer.getContent())){
+                                if(filter2.equals(answerListen[num++].getContent())){
                                     results.add(true);
                                 }else {
                                     results.add(false);
                                 }
-                                LogUtils.d("dealListen line = " + filter2);
+                                LogUtils.d("dealListen line = " + filter2 + ",answer = " + answer.getContent());
                             }
                         }
                     }

@@ -20,6 +20,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GsonUtil {
 
@@ -36,6 +38,8 @@ public class GsonUtil {
 
     private GsonUtil() {
     }
+
+
 
     /**
      * 转成json
@@ -55,6 +59,46 @@ public class GsonUtil {
         return jsonString;
     }
 
+    private static String String2Json(String s)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++)
+        {
+            char c = s.toCharArray()[i];
+            switch (c)
+            {
+                case '\"':
+                    sb.append("\\\""); break;
+                case '\\':
+                    sb.append("\\\\"); break;
+                case '/':
+                    sb.append("\\/"); break;
+                case '\b':
+                    sb.append("\\b"); break;
+                case '\f':
+                    sb.append("\\f"); break;
+                case '\n':
+                    sb.append("\\n"); break;
+                case '\r':
+                    sb.append("\\r"); break;
+                case '\t':
+                    sb.append("\\t"); break;
+                default:
+                    if ((c >= 0 && c <= 31)||c ==127)//在ASCⅡ码中，第0～31号及第127号(共33个)是控制字符或通讯专用字符
+                    {
+
+
+                    }
+                    else
+                    {
+                        sb.append(c);
+                    }
+                    break;
+            }
+        }
+        return sb.toString();
+    }
+    
     /**
      * 转成bean
      *
@@ -65,6 +109,7 @@ public class GsonUtil {
     public static <T> T gsonToBean(String gsonString, Class<T> cls) {
         T t = null;
         if (gson != null) {
+            //gsonString = String2Json(gsonString);
             t = gson.fromJson(gsonString, cls);
         }
         return t;
@@ -262,6 +307,26 @@ public class GsonUtil {
             e.printStackTrace();
         }
         return stringBuilder.toString();
+    }
+
+    public static String delHTMLTag(String htmlStr){
+        String regEx_script="<script[^>]*?>[\\s\\S]*?<\\/script>"; //定义script的正则表达式
+        String regEx_style="<style[^>]*?>[\\s\\S]*?<\\/style>"; //定义style的正则表达式
+        String regEx_html="<[^>]+>"; //定义HTML标签的正则表达式
+
+        Pattern p_script=Pattern.compile(regEx_script,Pattern.CASE_INSENSITIVE);
+        Matcher m_script=p_script.matcher(htmlStr);
+        htmlStr=m_script.replaceAll(""); //过滤script标签
+
+        Pattern p_style=Pattern.compile(regEx_style,Pattern.CASE_INSENSITIVE);
+        Matcher m_style=p_style.matcher(htmlStr);
+        htmlStr=m_style.replaceAll(""); //过滤style标签
+
+        Pattern p_html=Pattern.compile(regEx_html,Pattern.CASE_INSENSITIVE);
+        Matcher m_html=p_html.matcher(htmlStr);
+        htmlStr=m_html.replaceAll(""); //过滤html标签
+
+        return htmlStr.trim(); //返回文本字符串
     }
 }
 

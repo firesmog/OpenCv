@@ -12,6 +12,7 @@
     <color name="color_66000000">#66000000</color>
     <color name="color_99000000">#99000000</color>
     <color name="color_FFebf5ff">#FFebf5ff </color>
+    <!--蓝色-->
 
     <color name="color_33aaff">#33aaff</color>
     <color name="color_f13100">#f13100</color>
@@ -59,6 +60,7 @@
     <color name="color_55d993">#55d993</color>
     <color name="color_595959">#595959</color>
     <color name="color_f4f4f4">#f4f4f4</color>
+    <color name="color_cecece">#cecece</color>
     <color name="color_fafafa">#fafafa</color>
     <color name="color_ededed">#ededed</color>
     <color name="color_e4e4e4">#e4e4e4</color>

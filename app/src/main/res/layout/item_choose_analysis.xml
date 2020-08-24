@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_paper_test"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_vertical"
+    android:layout_marginTop="@dimen/qb_px_20"
+    android:orientation="vertical"
+    >
+    <TextView
+        android:id="@+id/tv_question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/dimens_sp_24"
+        android:text="@string/string_question"
+        android:textColor="@color/color_0095ff"
+        android:textStyle="bold"
+        />
+
+    <TextView
+        android:layout_marginTop="@dimen/qb_px_16"
+        android:id="@+id/tv_question_real"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/dimens_sp_25"
+        android:textColor="@color/color_000000"
+        android:background="@drawable/textview_border_blue"
+        />
+
+    <TextView
+        android:id="@+id/tv_answer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/dimens_sp_24"
+        android:text="@string/string_answer"
+        android:textColor="@color/color_0095ff"
+        android:layout_marginTop="@dimen/qb_px_50"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tv_real_answer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/dimens_sp_20"
+        android:text="@string/string_answer"
+        android:textColor="@color/color_262626"
+        android:layout_marginTop="@dimen/qb_px_16"
+       />
+
+    <TextView
+        android:id="@+id/tv_analysis"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/dimens_sp_24"
+        android:text="@string/string_analysis"
+        android:textColor="@color/color_0095ff"
+        android:layout_marginTop="@dimen/qb_px_50"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tv_real_analysis"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/dimens_sp_20"
+        android:text="@string/string_analysis"
+        android:textColor="@color/color_262626"
+        android:layout_marginTop="@dimen/qb_px_16"
+        />
+
+
+
+</LinearLayout>
