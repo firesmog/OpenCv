@@ -38,8 +38,8 @@ android {
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
-   // implementation(name: 'exerciseAnalalysis-1.0.6', ext: 'aar')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation(name: 'exerciseAnalalysis-1.0.3', ext: 'aar')
     implementation project(":opencv")
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'

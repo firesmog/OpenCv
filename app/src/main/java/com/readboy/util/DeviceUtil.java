@@ -20,6 +20,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.dream.exerciseanalysis.entity.PaperQuestion;
 
 
 public class DeviceUtil {
@@ -61,7 +62,7 @@ public class DeviceUtil {
     }
 
 
-    /*public static List<PaperQuestion> getAnalysisData(String fileName, Context context){
+    public static List<PaperQuestion> getAnalysisData(String fileName, Context context){
         List<PaperQuestion> data = new ArrayList<>();
         try {
             String question = GsonUtil.getJson(fileName,context);
@@ -74,7 +75,7 @@ public class DeviceUtil {
             LogUtils.e("getAnalysisData error == " + e.getMessage());
         }
         return data;
-    }*/
+    }
 
     private static String replaceBlank(String str) {
         String dest = "";

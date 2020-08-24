@@ -77,6 +77,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import cn.dream.exerciseanalysis.entity.PaperQuestion;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -298,22 +299,16 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     }
 
     private void getAnalysisData(){
-        /*List<PaperQuestion> data = DeviceUtil.getAnalysisData("exam_analysis_d.txt",this);
+        List<PaperQuestion> data = DeviceUtil.getAnalysisData("exam_analysis_d.txt",this);
        for(int i = 0 ; i < data.size(); i++){
            if(i == 0){
                analysisList.add(new AnalysisBean(data.get(i),true));
            }else {
                analysisList.add(new AnalysisBean(data.get(i),false));
            }
-       }*/
+       }
 
-        for(int i = 0 ; i < 5; i++){
-            if(i == 0){
-                analysisList.add(new AnalysisBean(i,true));
-            }else {
-                analysisList.add(new AnalysisBean(i,false));
-            }
-        }
+
     }
 
 
