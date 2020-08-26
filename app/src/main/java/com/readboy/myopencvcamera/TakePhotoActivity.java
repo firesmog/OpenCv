@@ -138,6 +138,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private AnalysisAdapter analysisAdapter;
     private List<AnalysisBean> analysisList = new ArrayList<>();
     private Answer[] answerListen;
+    private ExamBean examData;
 
 
     @Override
@@ -145,6 +146,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_takephoto);
         checkCameraPermission();
+        examData = DeviceUtil.getExamData("exam_answer_d.txt",this);
         initView();
         setAutoFocusListener();
 
@@ -243,6 +245,10 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 }
                 QuestionInfo info = questionInfoList.get(position);
                 glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
+                analysisAdapter.setItemSelect(position);
+                LinearLayoutManager llm = (LinearLayoutManager) rvAnalysis.getLayoutManager();
+                llm.scrollToPositionWithOffset(position, 0);
+                llm.setStackFromEnd(false);
             }
         });
 
@@ -259,9 +265,10 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 if(null != info){
                     glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
                     guideAdapter.setItemSelect(info.getQueNum() - 1);
-                   /* if(info.getQueNum()  > 1 && info.getQueNum() < analysisList.size() + 2 && null != analysisAdapter){
-                        analysisAdapter.setItemSelect(info.getQueNum() - 2);
-                    }*/
+                    if(info.getQueNum()  >0 && info.getQueNum() < analysisList.size() + 1 && null != analysisAdapter){
+                        analysisAdapter.setItemSelect(info.getQueNum() - 1);
+                        rvAnalysis.scrollToPosition(info.getQueNum() - 1);
+                    }
                 }
             }
 
@@ -273,7 +280,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         rvAnalysisLayoutManager = new CenterLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         rvAnalysis.setLayoutManager(rvAnalysisLayoutManager);
         getAnalysisData();
-        analysisAdapter = new AnalysisAdapter(analysisList,this);
+        analysisAdapter = new AnalysisAdapter(analysisList,this,examData);
         rvAnalysis.setAdapter(analysisAdapter);
         analysisAdapter.setOnItemClick(new AnalysisAdapter.OnItemClick() {
             @Override
@@ -281,8 +288,8 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 if(position  >= questionInfoList.size()){
                     return;
                 }
-                QuestionInfo info = questionInfoList.get(position + 1);
-                guideAdapter.setItemSelect(position + 1);
+                QuestionInfo info = questionInfoList.get(position);
+                guideAdapter.setItemSelect(position);
                 glChoose.drawRectangle(TakePhotoActivity.this,info.getQueLocation(),j++);
             }
         });
@@ -307,8 +314,6 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                analysisList.add(new AnalysisBean(data.get(i),false));
            }
        }
-
-
     }
 
 
@@ -486,21 +491,20 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         double width = Math.min(bottomWidth, topWidth);
         double width2 = Math.max(bottomWidth, topWidth);
 
-        ExamBean data = DeviceUtil.getExamData("exam_answer_d.txt",this);
-        LogUtils.d("getExamData = = " + data.toString()   );
+        LogUtils.d("getExamData = = " + examData.toString()   );
 
-        int examHeight = data.getHeight();
-        int examWidth = data.getWidth();
+        int examHeight = examData.getHeight();
+        int examWidth = examData.getWidth();
         double gapWidth = width2 - width;
         final double ratioHeight  = height/examHeight ;
         final double ratioWidth = width/examWidth;
-        questionInfoList = DeviceUtil.getQuestionInfoList(data,1.0d*llWidth/examWidth,1.0d*llHeight/examHeight);
+        questionInfoList = DeviceUtil.getQuestionInfoList(examData,1.0d*llWidth/examWidth,1.0d*llHeight/examHeight);
 
         LogUtils.d("ratioWidth leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth + "ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight
         + ",gap = " + gapWidth);
         //todo 展示分析界面
        final Bitmap stretch =BitmapUtils.cropBitmap(points,bitmap);
-        List<Children> bigQuestion = data.getChildren();
+        List<Children> bigQuestion = examData.getChildren();
         for (final Children children : bigQuestion) {
             switch (children.getType()){
                 case 10001:
@@ -581,17 +585,12 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 final List<Point> pointScrop = new ArrayList<>();
                 int marginMore = 6;
 
-                if(i == 0){
-                    pointScrop.add(new Point(Math.max((((answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  1.4*marginMore),1) ,Math.max(((answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-1.0*marginMore ,1)));
-                    pointScrop.add(new Point(Math.min((((answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  1.4*marginMore ),bitmap.getWidth()),Math.max(((answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 1.0*marginMore,1)));
-                    pointScrop.add(new Point(Math.max(((answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  -1.4*marginMore,1),Math.min((answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 2*marginMore ,bitmap.getHeight())));
-                    pointScrop.add(new Point(Math.min(((answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +  1.4* marginMore ,bitmap.getWidth()),Math.min((answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 2*marginMore,bitmap.getHeight())));
-                }else {
-                    pointScrop.add(new Point(Math.max((((answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  1.4*marginMore),1) ,Math.max(((answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-0.9*marginMore ,1)));
-                    pointScrop.add(new Point(Math.min((((answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  1.4*marginMore ),bitmap.getWidth()),Math.max(((answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 0.9*marginMore,1)));
-                    pointScrop.add(new Point(Math.max(((answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  - 1.4*marginMore,1),Math.min((answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 1.3*marginMore ,bitmap.getHeight())));
-                    pointScrop.add(new Point(Math.min(((answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   1.4*marginMore ,bitmap.getWidth()),Math.min((answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 1.3*marginMore,bitmap.getHeight())));
-                }
+
+                pointScrop.add(new Point(Math.max((((answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)-  2*marginMore),1) ,Math.max(((answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)-0.9*marginMore ,1)));
+                pointScrop.add(new Point(Math.min((((answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  +  2*marginMore ),bitmap.getWidth()),Math.max(((answer.getLeftTopY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight)- 0.9*marginMore,1)));
+                pointScrop.add(new Point(Math.max(((answer.getLeftTopX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth)  - 2*marginMore,1),Math.min((answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 1.3*marginMore ,bitmap.getHeight())));
+                pointScrop.add(new Point(Math.min(((answer.getRightBottomX() + realQuestion.getLeftTopX() + parentLeftTop.getX())*ratioWidth ) +   2*marginMore ,bitmap.getWidth()),Math.min((answer.getRightBottomY() + realQuestion.getLeftTopY() + parentLeftTop.getY())*ratioHeight + 1.3*marginMore,bitmap.getHeight())));
+
 
                 final Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
                 BitmapUtils.saveImageToGallery(stretch,this,11111 + 100*j + i);
@@ -783,12 +782,13 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                             String filter2 = filter1.replaceAll("[\\p{P}‘’“”]","");
 
                             if(!TextUtils.isEmpty(filter2) && !PhotoUtil.isContainChinese(filter2)){
-                                if(filter2.equals(answerListen[num++].getContent())){
+                                if(filter2.toLowerCase().equals(answerListen[num].getContent().toLowerCase())){
                                     results.add(true);
                                 }else {
                                     results.add(false);
                                 }
-                                LogUtils.d("dealListen line = " + filter2 + ",answer = " + answer.getContent());
+                                LogUtils.d("dealListen line = " + filter2 + ",answer = " + answerListen[num].getContent().toLowerCase());
+                                num = num + 1;
                             }
                         }
                     }

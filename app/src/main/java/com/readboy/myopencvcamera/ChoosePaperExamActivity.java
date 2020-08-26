@@ -36,7 +36,7 @@ public class ChoosePaperExamActivity extends BaseActivity {
     }
 
     private void initPaperRecycleView(){
-        rvPaper = findViewById(R.id.rv_recyclerView_paper);
+        rvPaper = (RecyclerView) findViewById(R.id.rv_recyclerView_paper);
         LinearLayoutManager layoutManager= new LinearLayoutManager(this);
         rvPaper.setLayoutManager(layoutManager);
         initPaperData();
@@ -57,7 +57,7 @@ public class ChoosePaperExamActivity extends BaseActivity {
 
 
     private void initCourseRecycleView(){
-        rvCourse = findViewById(R.id.rv_recyclerView_course);
+        rvCourse = (RecyclerView) findViewById(R.id.rv_recyclerView_course);
         LinearLayoutManager layoutManager= new LinearLayoutManager(this);
         rvCourse.setLayoutManager(layoutManager);
         initCourseData();

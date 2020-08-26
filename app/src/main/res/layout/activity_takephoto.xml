@@ -44,7 +44,8 @@
             android:layout_toEndOf="@id/ll_show_result"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/color_cecece"
+            android:background="@color/color_fff9e3"
+
             >
             <LinearLayout
                 android:id="@+id/ll_guide"

@@ -53,7 +53,6 @@ public class DeviceUtil {
         ExamBean data = null;
         try {
             String question = GsonUtil.getJson(fileName,context);
-            LogUtils.d("question question == " + question);
             data = GsonUtil.gsonToBean(question, ExamBean.class);
         }catch (Exception e){
             LogUtils.e("error == " + e.getMessage());
@@ -61,6 +60,18 @@ public class DeviceUtil {
         return data;
     }
 
+    public static String getQuestionAccordType(ExamBean examBean,int type){
+        String result = "";
+        List<Children> children = examBean.getChildren();
+        for (Children child : children) {
+            LogUtils.d(" getQuestionAccordType = " + child.toString() + " type == " + type);
+            if(type == child.getType()){
+                result = child.getChildren().get(0).getContent();
+            }
+        }
+        LogUtils.d(" getQuestionAccordType = " + result);
+        return result;
+    }
 
     public static List<PaperQuestion> getAnalysisData(String fileName, Context context){
         List<PaperQuestion> data = new ArrayList<>();
@@ -370,4 +381,6 @@ public class DeviceUtil {
             }
         }
     }
+
+
 }

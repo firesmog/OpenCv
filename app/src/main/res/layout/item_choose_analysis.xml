@@ -1,72 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/ll_paper_test"
+    android:id="@+id/ll_paper"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center_vertical"
     android:layout_marginTop="@dimen/qb_px_20"
     android:orientation="vertical"
     >
+
+    <ImageView
+        android:layout_width="@dimen/qb_px_4"
+        android:layout_height="match_parent"
+        android:background="@color/color_e3dcc4"
+        />
+
     <TextView
         android:id="@+id/tv_question"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/dimens_sp_24"
         android:text="@string/string_question"
         android:textColor="@color/color_0095ff"
         android:textStyle="bold"
+        android:layout_marginStart="@dimen/qb_px_30"
         />
 
-    <TextView
+    <cn.dream.exerciseanalysis.widget.ExerciseTextView
         android:layout_marginTop="@dimen/qb_px_16"
         android:id="@+id/tv_question_real"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/dimens_sp_25"
-        android:textColor="@color/color_000000"
-        android:background="@drawable/textview_border_blue"
+        android:textSize="@dimen/dimens_sp_20"
+        android:textColor="@color/color_262626"
+        android:layout_marginStart="@dimen/qb_px_50"
         />
 
     <TextView
         android:id="@+id/tv_answer"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/dimens_sp_24"
         android:text="@string/string_answer"
         android:textColor="@color/color_0095ff"
-        android:layout_marginTop="@dimen/qb_px_50"
-        android:textStyle="bold"/>
+        android:layout_marginTop="@dimen/qb_px_40"
+        android:textStyle="bold"
+        android:layout_marginStart="@dimen/qb_px_30"
+        />
 
-    <TextView
+    <cn.dream.exerciseanalysis.widget.ExerciseTextView
         android:id="@+id/tv_real_answer"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/dimens_sp_20"
         android:text="@string/string_answer"
         android:textColor="@color/color_262626"
         android:layout_marginTop="@dimen/qb_px_16"
-       />
+        android:layout_marginStart="@dimen/qb_px_50"
+        />
 
     <TextView
         android:id="@+id/tv_analysis"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/dimens_sp_24"
         android:text="@string/string_analysis"
         android:textColor="@color/color_0095ff"
-        android:layout_marginTop="@dimen/qb_px_50"
-        android:textStyle="bold"/>
+        android:layout_marginTop="@dimen/qb_px_40"
+        android:textStyle="bold"
+        android:layout_marginStart="@dimen/qb_px_30"
+        />
 
-    <TextView
+    <cn.dream.exerciseanalysis.widget.ExerciseTextView
         android:id="@+id/tv_real_analysis"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/dimens_sp_20"
         android:text="@string/string_analysis"
         android:textColor="@color/color_262626"
         android:layout_marginTop="@dimen/qb_px_16"
+        android:layout_marginStart="@dimen/qb_px_50"
+
+
         />
-
-
-
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/qb_px_20"
+        />
 </LinearLayout>

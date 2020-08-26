@@ -8,8 +8,8 @@
     <string name="title_canny">canny</string>
     <string name="title_exit">exit</string>
     <string name="title_click">photo</string>
-    <string name="string_question">题目</string>
-    <string name="string_answer">答案</string>
-    <string name="string_analysis">解析</string>
+    <string name="string_question">【题目】</string>
+    <string name="string_answer">【答案】</string>
+    <string name="string_analysis">【解析】</string>
 
 </resources>

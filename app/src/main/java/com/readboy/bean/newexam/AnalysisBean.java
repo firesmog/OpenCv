@@ -15,6 +15,8 @@ public class AnalysisBean {
         this.select = select;
     }
 
+
+
     public PaperQuestion getPaperQuestion() {
         return paperQuestion;
     }
@@ -29,5 +31,15 @@ public class AnalysisBean {
 
     public void setSelect(boolean select) {
         this.select = select;
+    }
+
+
+
+    @Override
+    public String toString() {
+        return "AnalysisBean{" +
+                "paperQuestion=" + paperQuestion +
+                ", select=" + select +
+                '}';
     }
 }
