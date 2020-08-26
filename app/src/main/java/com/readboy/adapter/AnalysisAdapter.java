@@ -3,7 +3,6 @@ package com.readboy.adapter;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -15,13 +14,14 @@ import com.readboy.bean.newexam.AnalysisBean;
 import com.readboy.bean.newexam.ExamBean;
 import com.readboy.log.LogUtils;
 import com.readboy.myopencvcamera.R;
-import com.readboy.util.DeviceUtil;
+import com.readboy.util.GsonUtil;
 import com.readboy.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
+import cn.dream.ebagcomlib.util.LogUtil;
 import cn.dream.exerciseanalysis.common.PaperConstant;
 import cn.dream.exerciseanalysis.entity.PaperQuestion;
 import cn.dream.exerciseanalysis.parser.Parser;
@@ -74,20 +74,17 @@ public class AnalysisAdapter extends RecyclerView.Adapter<AnalysisAdapter.ViewHo
         final AnalysisBean bean = mTestList.get(position);
         PaperQuestion question = bean.getPaperQuestion();
         dealUrl(question);
-        dealshowAnalysis(holder,question);
+        dealShowAnalysis(holder,question);
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                LogUtils.d("TAG bind click = true position111111 = " + position);
                 if(null != onitemClick){
                     onitemClick.onItemClick(position);
                 }
             }
         };
         holder.llView.setOnClickListener(listener);
-        /*holder.tvRealQuestion.setOnClickListener(listener);
-        holder.tvAnswer.setOnClickListener(listener);
-        holder.tvAnalysis.setOnClickListener(listener);*/
+
 
     }
 
@@ -105,11 +102,8 @@ public class AnalysisAdapter extends RecyclerView.Adapter<AnalysisAdapter.ViewHo
 
 
 
-    private void dealshowAnalysis(ViewHolder holder,PaperQuestion question){
+    private void dealShowAnalysis(ViewHolder holder, PaperQuestion question){
         String answer = dealAnswerAccordType(question);
-        StringBuilder builder1 = new StringBuilder();
-       // builder1.append("【").append(DeviceUtil.getQuestionAccordType(examBean,question.getType())).append("】");
-        //holder.tvQuestion.setText(builder1.toString());
 
         switch (question.getType()) {
             case 99999:
@@ -119,6 +113,11 @@ public class AnalysisAdapter extends RecyclerView.Adapter<AnalysisAdapter.ViewHo
                 break;
             case 10001:
                 String content = question.getContent();
+
+                String rgex = "<blk(.*?)</blk>";
+                String after = "&nbsp;&nbsp;&nbsp;&nbsp;" + dealChoose(question.getAnswer()) + "&nbsp;&nbsp;&nbsp;&nbsp;";
+                content = content.replaceAll(StringUtil.getSubUtil(content,rgex).get(0),after).replaceAll("<blk", "").replaceAll("</blk>", "");
+
                 StringBuilder builder = new StringBuilder(content);
                 List<Object> object = question.getOptions();
                 if(null != object && object.size() > 0 ){
@@ -140,6 +139,11 @@ public class AnalysisAdapter extends RecyclerView.Adapter<AnalysisAdapter.ViewHo
                 Parser.parse(holder.tvRealQuestion, TransferUtils.transfer(question.getContent()), Parser.ParserData.TYPE_PAPER, baseUrl);
                 Parser.parse(holder.tvAnswer, TransferUtils.transfer(answer), Parser.ParserData.TYPE_PAPER, baseUrl);
                 Parser.parse(holder.tvAnalysis, TransferUtils.transfer(dealSolution(question.getSolution())), Parser.ParserData.TYPE_PAPER, baseUrl);
+                ArrayList<String> list = (ArrayList<String>) question.getAnswer();
+                for (int i = 0; i < list.size(); i++) {
+                    String s = list.get(i);
+                    holder.tvRealQuestion.handleEnter(i, GsonUtil.delHTMLTag(s));
+                }
                 break;
         }
     }
