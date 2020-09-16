@@ -39,6 +39,18 @@ public class BinaryUtils {
         return dst;
     }
 
+    /**
+     * opencv自带的二值化
+     * @param src
+     * @return
+     */
+    public static Mat binaryNativeMain(Mat src,int type1,int type2){
+        Mat dst = src.clone();
+        //方案一：采用固定黑底背景 然后利用比例计算最左侧的边 Imgproc.adaptiveThreshold(src, dst, 255, type1, type2, 31, 22);
+        Imgproc.adaptiveThreshold(src, dst, 250, type1, type2, 33, 21);
+        return dst;
+    }
+
 
     /**
      * 图像二值化 阀值自适应确定

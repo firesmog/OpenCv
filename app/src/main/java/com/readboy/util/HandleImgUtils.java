@@ -48,7 +48,17 @@ public class HandleImgUtils {
 		Mat src = GrayUtils.grayNative(frame);
 		BitmapUtils.savePicAsBitmap(src,context,100);
 		src = BinaryUtils.binaryNative(src,0,0);
-		BitmapUtils.savePicAsBitmap(src,context,102);
+		return src;
+	}
+
+	public static Mat processImageMain(Mat gray, Context context) {
+		Mat frame = new Mat();
+		Imgproc.cvtColor(gray,frame,Imgproc. COLOR_RGBA2RGB);
+		Mat src = GrayUtils.grayNative(frame);
+		BitmapUtils.savePicAsBitmap(src,context,100);
+		src = BinaryUtils.binaryNativeMain(src,0,0);
+		BitmapUtils.savePicAsBitmap(src,context,101);
+
 		return src;
 	}
 
@@ -93,8 +103,25 @@ public class HandleImgUtils {
 	}
 
 
+	public static  RectangleInfo getRectangleMain(Mat frame,Context context){
+		Mat frameData = processImageMain(frame,context);
+		Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
+		Mat edge=new Mat();
+		Imgproc.Canny(frameData,edge,90,270,5,true);
+		BitmapUtils.savePicAsBitmap(edge,context,102);
+
+		List<Point> points = HandleImgUtils.getCornersByContour(edge);
+		for (Point point : points) {
+			LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
+		}
+		RectangleInfo info = new RectangleInfo();
+		info.setPoints(points);
+		info.setBitmap(bitmap);
+		return info;
+	}
+
 	public static  RectangleInfo getRectangle(Mat frame,Context context){
-		Mat frameData = HandleImgUtils.processImage(frame,context);
+		Mat frameData = processImage(frame,context);
 		Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
 		Mat edge=new Mat();
 		Imgproc.Canny(frameData,edge,90,270,5,true);

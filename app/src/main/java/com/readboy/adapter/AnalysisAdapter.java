@@ -116,7 +116,12 @@ public class AnalysisAdapter extends RecyclerView.Adapter<AnalysisAdapter.ViewHo
 
                 String rgex = "<blk(.*?)</blk>";
                 String after = "&nbsp;&nbsp;&nbsp;&nbsp;" + dealChoose(question.getAnswer()) + "&nbsp;&nbsp;&nbsp;&nbsp;";
-                content = content.replaceAll(StringUtil.getSubUtil(content,rgex).get(0),after).replaceAll("<blk", "").replaceAll("</blk>", "");
+
+                try {
+                    content = content.replaceAll(StringUtil.getSubUtil(content,rgex).get(0),after).replaceAll("<blk", "").replaceAll("</blk>", "");
+                }catch (Exception e){
+                    LogUtils.d("Exception e == " + e.getMessage());
+                }
 
                 StringBuilder builder = new StringBuilder(content);
                 List<Object> object = question.getOptions();

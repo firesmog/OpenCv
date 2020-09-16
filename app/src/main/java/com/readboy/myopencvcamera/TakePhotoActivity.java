@@ -139,19 +139,46 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private List<AnalysisBean> analysisList = new ArrayList<>();
     private Answer[] answerListen;
     private ExamBean examData;
+    private int paperPosition;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        paperPosition = getIntent().getIntExtra("paperPage",0);
         setContentView(R.layout.activity_takephoto);
         checkCameraPermission();
-        examData = DeviceUtil.getExamData("exam_answer_d.txt",this);
+        examData = getPaperExamData();
         initView();
         setAutoFocusListener();
 
     }
 
+    private List<PaperQuestion> getPaperQuestionData(){
+        switch (paperPosition){
+            case 0:
+                return DeviceUtil.getAnalysisData("exam_analysis_a.txt",this);
+
+            case 1:
+                return DeviceUtil.getAnalysisData("exam_analysis_b.txt",this);
+
+            default:
+                return DeviceUtil.getAnalysisData("exam_analysis_d.txt",this);
+        }
+    }
+
+    private ExamBean  getPaperExamData(){
+        switch (paperPosition){
+            case 0:
+                return DeviceUtil.getExamData("exam_answer_a.txt",this);
+
+            case 1:
+                return DeviceUtil.getExamData("exam_answer_b.txt",this);
+
+            default:
+                return DeviceUtil.getExamData("exam_answer_d.txt",this);
+        }
+    }
 
 
     @Override
@@ -306,7 +333,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     }
 
     private void getAnalysisData(){
-        List<PaperQuestion> data = DeviceUtil.getAnalysisData("exam_analysis_d.txt",this);
+        List<PaperQuestion> data = getPaperQuestionData();
        for(int i = 0 ; i < data.size(); i++){
            if(i == 0){
                analysisList.add(new AnalysisBean(data.get(i),true));
@@ -315,6 +342,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
            }
        }
     }
+
 
 
 
@@ -729,7 +757,6 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 }
             }
         }
-
     }
 
     private void dealFillIn(String result, final Location location, final double ratioWidth , final double ratioHeight, final Answer answer){
@@ -838,7 +865,26 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
         double midY =  1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/5 + location.getTop_left().getY() ;  ;
         ImageView child  = new ImageView(this);
-        boolean right = answer.getContent().equals(result);
+        String an = answer.getContent();
+        switch (an) {
+            case "0":
+                an = "A";
+                break;
+            case "1":
+                an = "B";
+                break;
+            case "2":
+                an = "C";
+
+                break;
+            case "3":
+                an = "D";
+                break;
+        }
+        boolean right = an.equals(result);
+
+
+
         if(right){
             child.setBackground(getResources().getDrawable(R.mipmap.ic_right));
         }else {
