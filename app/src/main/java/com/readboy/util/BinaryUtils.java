@@ -47,7 +47,7 @@ public class BinaryUtils {
     public static Mat binaryNativeMain(Mat src,int type1,int type2){
         Mat dst = src.clone();
         //方案一：采用固定黑底背景 然后利用比例计算最左侧的边 Imgproc.adaptiveThreshold(src, dst, 255, type1, type2, 31, 22);
-        Imgproc.adaptiveThreshold(src, dst, 250, type1, type2, 33, 21);
+        Imgproc.adaptiveThreshold(src, dst, 250, type1, type2, 29, 21);
         return dst;
     }
 

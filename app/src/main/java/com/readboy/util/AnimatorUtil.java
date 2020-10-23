@@ -9,11 +9,10 @@ public class AnimatorUtil {
     private static ObjectAnimator animator;
 
     public static void startUpAndDownAnimator(View view){
-        animator = ObjectAnimator.ofFloat(view, "translationY", 0.0f , -600f, 400f , 0f);
+        animator = ObjectAnimator.ofFloat(view, "translationY", 0.0f , -600f, 600f , 0f);
         animator.setDuration(1500);//动画时间
         animator.setInterpolator(new LinearInterpolator());//实现反复移动的效果
         animator.setRepeatCount(-1);//设置动画重复次数
-        animator.setStartDelay(500);//设置动画延时执行
         animator.start();//启动动
     }
 

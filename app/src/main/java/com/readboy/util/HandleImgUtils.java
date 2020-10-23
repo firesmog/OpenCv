@@ -2,9 +2,11 @@ package com.readboy.util;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import com.readboy.bean.newexam.RectangleInfo;
 import com.readboy.log.LogUtils;
+import com.readboy.myopencvcamera.MainActivity;
 
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
@@ -20,6 +22,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,7 +50,6 @@ public class HandleImgUtils {
 		Mat frame = new Mat();
 		Imgproc.cvtColor(gray,frame,Imgproc. COLOR_RGBA2RGB);
 		Mat src = GrayUtils.grayNative(frame);
-		BitmapUtils.savePicAsBitmap(src,context,100);
 		src = BinaryUtils.binaryNative(src,0,0);
 		return src;
 	}
@@ -66,14 +69,13 @@ public class HandleImgUtils {
 		List<MatOfPoint> contours=new ArrayList<>();
 		//轮廓检测
 		Imgproc.findContours(imgsource,contours,new Mat(),Imgproc.RETR_EXTERNAL,Imgproc.CHAIN_APPROX_SIMPLE);
-		LogUtils.d("findContours size = " + contours.size());
 		double maxArea= 20;
 		MatOfPoint temp_contour= contours.get(0);//假设最大的轮廓在index=0处
 		MatOfPoint2f approxCurve = new MatOfPoint2f();
 		for (int idx=0;idx<contours.size();idx++){
 			temp_contour=contours.get(idx);
 			double contourarea=Imgproc.contourArea(temp_contour);
-			if(  contourarea < 6000){
+			if(contourarea < 60000){
 				continue;
 			}
 			LogUtils.d("findContours area = " + contourarea);
@@ -95,7 +97,7 @@ public class HandleImgUtils {
 		}
 		LogUtils.d("findContours area max  = " + maxArea);
 
-		if(approxCurve.total() != 4 && maxArea < 10000){
+		if(approxCurve.total() != 4){
 			LogUtils.d(	"we find no rectangle max area here ");
 			return  null;
 		}
@@ -104,31 +106,34 @@ public class HandleImgUtils {
 
 
 	public static  RectangleInfo getRectangleMain(Mat frame,Context context){
+		BitmapUtils.savePicAsBitmap(frame, context,1111);
 		Mat frameData = processImageMain(frame,context);
 		Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
 		Mat edge=new Mat();
-		Imgproc.Canny(frameData,edge,90,270,5,true);
-		BitmapUtils.savePicAsBitmap(edge,context,102);
-
+		Imgproc.Canny(frameData,edge,90,270,7,true);
 		List<Point> points = HandleImgUtils.getCornersByContour(edge);
-		for (Point point : points) {
-			LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
-		}
 		RectangleInfo info = new RectangleInfo();
 		info.setPoints(points);
 		info.setBitmap(bitmap);
 		return info;
 	}
 
+
+
 	public static  RectangleInfo getRectangle(Mat frame,Context context){
+		long zero = System.currentTimeMillis();
+		BitmapUtils.savePicAsBitmap(frame, context,1111);
+		long firstTime = System.currentTimeMillis();
+		LogUtils.d("savePictureAccordExam getRectangle used time000 = " + ( firstTime - zero));
+
 		Mat frameData = processImage(frame,context);
+		long secondTime = System.currentTimeMillis();
+		LogUtils.d("savePictureAccordExam getRectangle used time = " + (secondTime - firstTime));
+
 		Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
 		Mat edge=new Mat();
-		Imgproc.Canny(frameData,edge,90,270,5,true);
+		Imgproc.Canny(frameData,edge,90,270,7,true);
 		List<Point> points = HandleImgUtils.getCornersByContour(edge);
-		for (Point point : points) {
-			LogUtils.d("point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
-		}
 		RectangleInfo info = new RectangleInfo();
 		info.setPoints(points);
 		info.setBitmap(bitmap);
@@ -137,6 +142,8 @@ public class HandleImgUtils {
 
 	//处理矩形矫正（test pass）
 	public static RectangleInfo dealRectangleCorrect(Mat frame,RectangleInfo info,Context context){
+		LogUtils.d("savePictureAccordExam frame size = " + frame.size());
+
 		List<Point> points = info.getPoints();
 		Bitmap bitmap = info.getBitmap();
 		Mat srcPoints = Converters.vector_Point_to_Mat(points, CvType.CV_32F);
@@ -157,7 +164,16 @@ public class HandleImgUtils {
 		Mat dstPoints = Converters.vector_Point_to_Mat(dst, CvType.CV_32F);
 		Mat perspectiveMat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
 		Mat result = new Mat();
-		Imgproc.warpPerspective(frame, result, perspectiveMat, frame.size(),Imgproc.INTER_LANCZOS4 );
+		Mat org = new Mat();
+
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(BitmapUtils.getFilePath(context,1111));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		Utils.bitmapToMat(BitmapFactory.decodeStream(fis),org);
+		Imgproc.warpPerspective(org, result, perspectiveMat, org.size(),Imgproc.INTER_LANCZOS4 );
 		Utils.matToBitmap(result,bitmap);
 		info.setBitmap(bitmap);
 		info.setPoints(dst);

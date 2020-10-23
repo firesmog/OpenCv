@@ -62,8 +62,6 @@ public class BitmapUtils {
                 cropRect.height()
         );
 
-
-
         android.graphics.Point cutTopLeft = new android.graphics.Point();
         android.graphics.Point cutTopRight = new android.graphics.Point();
         android.graphics.Point cutBottomLeft = new android.graphics.Point();
@@ -80,8 +78,6 @@ public class BitmapUtils {
 
         cutBottomRight.x = (int)(bitmapTopRight.x > bitmapBottomRight.x ? cropRect.width() - Math.abs(bitmapBottomRight.x - bitmapTopRight.x) : cropRect.width());
         cutBottomRight.y = (int)(bitmapBottomLeft.y > bitmapBottomRight.y ? cropRect.height() - Math.abs(bitmapBottomRight.y - bitmapBottomLeft.y) : cropRect.height());
-
-
 
 
         float width = cut.getWidth();
@@ -169,10 +165,8 @@ public class BitmapUtils {
         if (!appDir.exists()) {
             appDir.mkdirs();
         }
-
         //文件名为时间
         String fileName = "Image" + i + ".jpg";
-
         //获取文件
         File file = new File(appDir, fileName);
         return file.getPath();

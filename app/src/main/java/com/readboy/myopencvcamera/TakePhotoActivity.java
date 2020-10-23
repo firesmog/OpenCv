@@ -467,6 +467,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             @Override
             public void onNext(final RectangleInfo info) {
                 final RectangleInfo value = HandleImgUtils.dealRectangleCorrect(frame,info,TakePhotoActivity.this);
+                LogUtils.d("frame size == width =  " + frame.width() + ",heght = " + frame.height()  + ",size = " + frame.size());
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 llShow.setBackground(new BitmapDrawable(getResources(),value.getBitmap()));
