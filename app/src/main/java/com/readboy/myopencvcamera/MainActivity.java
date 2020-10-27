@@ -121,6 +121,8 @@ import io.reactivex.schedulers.Schedulers;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import pl.droidsonroids.gif.GifDrawable;
+import pl.droidsonroids.gif.GifImageView;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
 import static java.lang.Math.abs;
@@ -197,7 +199,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private int matchesPointCount = 0;
     private boolean isChoosed;
     private int fileNum = 99;
-    private ImageView ivScan;
+    private GifDrawable gifDrawable;
+    private GifImageView gifImageView;
 
     /**
      * 第一次创建时调用
@@ -227,7 +230,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             }
         });
         llShow = (RelativeLayout) findViewById(R.id.ll_show);
-        ivScan = (ImageView) findViewById(R.id.iv_scan_test);
+       gifImageView = (GifImageView)findViewById(R.id.gif_iv);
+       gifDrawable = (GifDrawable) gifImageView.getDrawable();
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         DisplayMetrics outMetrics = new DisplayMetrics();
@@ -262,6 +266,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     }
 
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        gifDrawable.start();
+    }
 
     @Override
     public void onPause() {
@@ -280,6 +289,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             LogUtils.d( "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        gifDrawable.stop();
     }
 
     public void onDestroy() {
@@ -363,6 +378,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     @SuppressLint("NewApi")
     private void savePictureAccordExam(final Mat frame){
+        if(!gifDrawable.isRunning()){
+        gifDrawable.start();
+        gifDrawable.setLoopCount( 0); //设置播放的次数，播放完了就自动停止
+    }
         Observable.create(new ObservableOnSubscribe<RectangleInfo>() {
             // 1. 创建被观察者 & 生产事件
             @Override
@@ -394,8 +413,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     @Override
                     public void onNext(final RectangleInfo info) {
                         LogUtils.d("savePictureAccordExam onNextr = " );
+                        gifDrawable.stop(); //停止播放
                         llShow.setVisibility(View.VISIBLE);
-                        AnimatorUtil.startUpAndDownAnimator(ivScan);
                         llShow.setBackground(new BitmapDrawable(getResources(),info.getBitmap()));
                         mOpenCvCameraView.setVisibility(View.GONE);
                         getScore();
@@ -404,7 +423,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     @Override
                     public void onError(Throwable e) {
                         LogUtils.d("savePictureAccordExam error = " + e.getMessage());
-                        ShowToastUtils.showToast(MainActivity.this,"当前照片不规范，请调整姿势重新拍摄",Toast.LENGTH_SHORT);
+                        //ShowToastUtils.showToast(MainActivity.this,"当前照片不规范，请调整姿势重新拍摄",Toast.LENGTH_SHORT);
                         //llShow.setVisibility(View.GONE);
                         //mOpenCvCameraView.setVisibility(View.VISIBLE);
                         //mOpenCvCameraView.enableView();
@@ -441,7 +460,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     @Override
                     public void onNext(final ExamResponse info) {
                         LogUtils.d("savePictureAccordExam onNextr = " );
-                        AnimatorUtil.endUpAndDownAnimator();
                         if(null != info ){
                             LogUtils.d("savePictureAccordExam onNextr = " + info.toString() );
                             if(info.getF_responseNo() == 100000){
@@ -450,7 +468,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                                     continuePhotoDelay();
                                 }
                             }else {
-                                ShowToastUtils.showToast(MainActivity.this,"当前照片不规范，请调整姿势重新拍摄",Toast.LENGTH_SHORT);
+                                //ShowToastUtils.showToast(MainActivity.this,"当前照片不规范，请调整姿势重新拍摄",Toast.LENGTH_SHORT);
                                 continuePhotoDelay();
 
                             }
@@ -468,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     @Override
                     public void onError(Throwable e) {
                         LogUtils.d("savePictureAccordExam error = " + e.getMessage());
-                        ShowToastUtils.showToast(MainActivity.this,"当前照片不规范，请调整姿势重新拍摄",Toast.LENGTH_SHORT);
+                       // ShowToastUtils.showToast(MainActivity.this,"当前照片不规范，请调整姿势重新拍摄",Toast.LENGTH_SHORT);
                         /*llShow.setVisibility(View.GONE);
                         mOpenCvCameraView.setVisibility(View.VISIBLE);
                         mOpenCvCameraView.enableView();*/

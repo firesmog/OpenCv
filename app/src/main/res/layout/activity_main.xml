@@ -12,6 +12,13 @@
         opencv:show_fps="false"
         opencv:camera_id="any"/>
 
+    <pl.droidsonroids.gif.GifImageView
+        android:id="@+id/gif_iv"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/gif"
+        />
 
     <RelativeLayout
         android:id="@+id/ll_show"
@@ -19,13 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         >
-        <ImageView
-            android:id="@+id/iv_scan_test"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:background="@mipmap/ic_scan_loading"
-            />
+
 
     </RelativeLayout>
 
