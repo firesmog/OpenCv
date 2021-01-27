@@ -1,5 +1,7 @@
 package com.readboy.net.bean;
 
+import com.readboy.bean.old.Point;
+
 public class Location {
     private Point right_bottom;
     private Point top_left;

@@ -14,6 +14,8 @@ import com.readboy.bean.newexam.QuestionInfo;
 import com.readboy.log.LogUtils;
 import com.readboy.myopencvcamera.R;
 
+import org.opencv.core.Point;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -380,6 +382,13 @@ public class DeviceUtil {
                 this.answer = answer;
             }
         }
+    }
+
+    public static Point transformPointFromOld(com.readboy.bean.old.Point point){
+        Point point1 = new Point();
+        double[] points = {point.getX(),point.getY()};
+        point1.set(points);
+        return point1;
     }
 
 

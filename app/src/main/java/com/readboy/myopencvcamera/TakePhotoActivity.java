@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -43,6 +46,7 @@ import com.readboy.log.LogUtils;
 import com.readboy.net.HttpUtil;
 import com.readboy.net.NetUtil;
 import com.readboy.net.bean.BaseResponse;
+import com.readboy.net.bean.Block;
 import com.readboy.net.bean.Line;
 import com.readboy.net.bean.Word;
 import com.readboy.util.AnimatorUtil;
@@ -70,6 +74,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -140,6 +145,9 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private Answer[] answerListen;
     private ExamBean examData;
     private int paperPosition;
+    private Location oriLocation = new Location();
+    private Location oriTop = new Location();
+    private Location oriBottom = new Location();
 
 
     @Override
@@ -151,6 +159,14 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         examData = getPaperExamData();
         initView();
         setAutoFocusListener();
+        oriLocation.setTop_left(new com.readboy.bean.old.Point(394,322));
+        oriLocation.setRight_bottom(new com.readboy.bean.old.Point(601,336));
+
+        oriTop.setTop_left(new com.readboy.bean.old.Point(1343,146));
+        oriTop.setRight_bottom(new com.readboy.bean.old.Point(1503,162));
+
+        oriBottom.setTop_left(new com.readboy.bean.old.Point(932,939));
+        oriBottom.setRight_bottom(new com.readboy.bean.old.Point(1052,950));
 
     }
 
@@ -357,7 +373,8 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 break;
             case R.id.iv_take_photo:
                 mOpenCvCameraView.cancelAutoFocus();
-                savePictureAccordExam(mRgba);
+                getRootRecordLocation(mRgba);
+                //savePictureAccordExam(mRgba);
                 break;
             case R.id.iv_from_album:
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -443,6 +460,209 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
 
     }
 
+
+    private  void getRootRecordLocation(final Mat frameData){
+        Observable.create(new ObservableOnSubscribe<RectangleInfo>() {
+            // 1. 创建被观察者 & 生产事件
+            @Override
+            public void subscribe(ObservableEmitter<RectangleInfo> emitter) {
+                Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(frameData, bitmap);
+                RectangleInfo info = new RectangleInfo();
+                List<Point> points = new ArrayList<>();
+                info.setBitmap(bitmap);
+                String result = getOcrResult(frameData,bitmap);
+                LogUtils.d("result == " + result);
+                //获取标记点的坐标（R 四年级数学上册）
+                Location recordLocationBottom = findRecordLocationBottom(result);
+                Location recordLocationTop = findRecordLocationTop(result);
+                if(null == recordLocationBottom || null == recordLocationTop){
+                    //todo 提示重拍
+                    LogUtils.d("result == null == recordLocation" + result);
+                    return;
+                }
+                //根据标记点源坐标与识别的标记点坐标，计算出教辅资料的原点。
+                com.readboy.bean.old.Point photoPointBottomStart = getExamPhotoStartPoint(recordLocationTop,recordLocationBottom);
+                com.readboy.bean.old.Point photoPointBottomEnd = getExamPhotoEndPoint(recordLocationTop,recordLocationBottom);
+
+                points.add(DeviceUtil.transformPointFromOld(photoPointBottomStart));
+                points.add(DeviceUtil.transformPointFromOld(photoPointBottomEnd));
+                points.add(DeviceUtil.transformPointFromOld(recordLocationTop.getTop_left()));
+                points.add(DeviceUtil.transformPointFromOld(recordLocationTop.getRight_bottom()));
+                points.add(DeviceUtil.transformPointFromOld(recordLocationBottom.getTop_left()));
+                points.add(DeviceUtil.transformPointFromOld(recordLocationBottom.getRight_bottom()));
+                info.setPoints(points);
+                info.setBitmap(drawRectangles(info.getBitmap(),info.getPoints()));
+                emitter.onNext(info);
+                emitter.onComplete();
+            }
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<RectangleInfo>() {
+
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(final RectangleInfo info) {
+                        LogUtils.d("getRootRecordLocation == " + info.getPoints().size());
+                        llShow.setVisibility(View.VISIBLE);
+                        mOpenCvCameraView.setVisibility(View.GONE);
+                        llShow.setBackground(new BitmapDrawable(getResources(),info.getBitmap()));
+
+
+
+
+
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        LogUtils.d("getRootRecordLocation error == " + e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.d("savePictureAccordExam onComplete ");
+
+                    }
+                });
+    }
+
+    private Bitmap drawRectangles(Bitmap imageBitmap,
+                                List<Point> points) {
+        int left, top, right, bottom;
+
+        Bitmap mutableBitmap = imageBitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(mutableBitmap);
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);//不填充
+        paint.setStrokeWidth(3);  //线的宽度
+        for(int i = 0; i < 3; i ++ ){
+            left = (int) points.get(2*i).x;
+            top = (int) points.get(2*i).y;
+            right = (int) points.get(2*i + 1).x;
+            bottom = (int) points.get(2*i + 1).y;
+            canvas.drawRect(left, top, right, bottom, paint);
+        }
+
+       return mutableBitmap;
+    }
+
+    private void drawRectangles2(Bitmap imageBitmap,
+                                List<Point> points) {
+        int left, top, right, bottom;
+
+        Bitmap mutableBitmap = imageBitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(mutableBitmap);
+
+        Paint paint = new Paint();
+        left = (int) points.get(2).x;
+        top = (int) points.get(2).y;
+        right = (int) points.get(3).x;
+        bottom = (int) points.get(3).y;
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);//不填充
+        paint.setStrokeWidth(10);  //线的宽度
+        canvas.drawRect(left, top, right, bottom, paint);
+        LogUtils.d("getRootRecordLocation == " + left  + ", right = " + right + ",top = " + top + ",bottopm = " + bottom);
+        llShow.setBackground(new BitmapDrawable(getResources(),mutableBitmap));
+    }
+
+    private String getOcrResult(Mat frameData,Bitmap bitmap){
+
+        Map<String, String> header = null;
+        String result = "";
+        try {
+            header = NetUtil.constructHeader("en", "true");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] imageByteArray = baos.toByteArray();
+            String imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
+            String bodyParam = "image=" + imageBase64;
+            result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam,1);
+            LogUtils.d("result == " + result);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private Location findRecordLocationBottom(String result){
+        if (!TextUtils.isEmpty(result)) {
+            Location location = new Location();
+            BaseResponse baseResponse = GsonUtil.gsonToBean(result, BaseResponse.class);
+            for (Block block : baseResponse.getData().getBlock()) {
+                if(null != block){
+                    for (Line line : block.getLine()) {
+                        if(null == line){
+                            continue;
+                        }
+                        LogUtils.d("line result == bottom =" + line.toString());
+                        for (Word word : line.getWord()) {
+                            if(null == word || TextUtils.isEmpty(word.getContent()) ||  !word.getContent().contains("四年级数学上册")){
+                                continue;
+                            }
+                            location.setRight_bottom(line.getLocation().getRight_bottom());
+                            location.setTop_left(line.getLocation().getTop_left());
+                            return location;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private Location findRecordLocationTop(String result){
+        if (!TextUtils.isEmpty(result)) {
+            Location location = new Location();
+            BaseResponse baseResponse = GsonUtil.gsonToBean(result, BaseResponse.class);
+            for (Block block : baseResponse.getData().getBlock()) {
+                if(null != block){
+                    for (Line line : block.getLine()) {
+                        if(null == line){
+                            continue;
+                        }
+                        LogUtils.d("line result == top = " + line.toString());
+                        for (Word word : line.getWord()) {
+                            if(null == word || TextUtils.isEmpty(word.getContent()) ||  !word.getContent().contains("四、三位数乘两位数")){
+                                continue;
+                            }
+                            location.setRight_bottom(line.getLocation().getRight_bottom());
+                            location.setTop_left(line.getLocation().getTop_left());
+                            return location;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private com.readboy.bean.old.Point getExamPhotoStartPoint(Location locationTop,Location locationBottom){
+        int gapTopTopY = Math.abs(oriTop.getTop_left().getY() - oriBottom.getRight_bottom().getY());
+        int gapMeasure = Math.abs(locationTop.getTop_left().getY() - locationBottom.getRight_bottom().getY());
+        float ratio = (float)gapMeasure/(float)gapTopTopY;
+        int startLtY = (int)Math.abs(ratio*(oriTop.getTop_left().getY() - oriLocation.getTop_left().getY())) + locationTop.getTop_left().getY();
+        int startLtX = locationTop.getTop_left().getX() - (int)Math.abs(ratio*(oriTop.getTop_left().getX() - oriLocation.getTop_left().getX())) ;
+        return new com.readboy.bean.old.Point(startLtX,startLtY);
+    }
+
+    private com.readboy.bean.old.Point getExamPhotoEndPoint(Location locationTop,Location locationBottom){
+        int gapTopTopY = Math.abs(oriTop.getTop_left().getY() - oriBottom.getRight_bottom().getY());
+        int gapMeasure = Math.abs(locationTop.getTop_left().getY() - locationBottom.getRight_bottom().getY());
+        float ratio = (float)gapMeasure/(float)gapTopTopY;
+        int endY = (int)Math.abs(ratio*(oriTop.getRight_bottom().getY() - oriLocation.getRight_bottom().getY())) + locationTop.getRight_bottom().getY();
+        int endX = locationTop.getRight_bottom().getX() - (int)Math.abs(ratio*(oriTop.getRight_bottom().getX() - oriLocation.getRight_bottom().getX())) ;
+        return new com.readboy.bean.old.Point(endX,endY);
+    }
 
     @SuppressLint("NewApi")
     private void savePictureAccordExam(final Mat frame){
