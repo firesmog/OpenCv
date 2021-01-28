@@ -60,6 +60,12 @@ import com.readboy.util.PhotoUtil;
 import com.readboy.util.ShowToastUtils;
 import com.readboy.widgest.CenterLayoutManager;
 import com.readboy.widgest.GuideLayout;
+import com.youdao.ocr.online.ImageOCRecognizer;
+import com.youdao.ocr.online.OCRListener;
+import com.youdao.ocr.online.OCRParameters;
+import com.youdao.ocr.online.OCRResult;
+import com.youdao.ocr.online.OcrErrorCode;
+import com.youdao.ocr.online.Region;
 
 import org.apache.commons.codec.binary.Base64;
 import org.opencv.android.CameraBridgeViewBase;
@@ -148,6 +154,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
     private Location oriLocation = new Location();
     private Location oriTop = new Location();
     private Location oriBottom = new Location();
+    private OCRParameters tps;
 
 
     @Override
@@ -155,10 +162,20 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         super.onCreate(savedInstanceState);
         paperPosition = getIntent().getIntExtra("paperPage",0);
         setContentView(R.layout.activity_takephoto);
+        initData();
         checkCameraPermission();
         examData = getPaperExamData();
         initView();
         setAutoFocusListener();
+
+    }
+
+    private void  initData(){
+        tps = new OCRParameters.Builder()
+                .source("youdaoocr")
+                .timeout(100000)
+                .lanType("zh-en")
+                .build();
         oriLocation.setTop_left(new com.readboy.bean.old.Point(394,322));
         oriLocation.setRight_bottom(new com.readboy.bean.old.Point(601,336));
 
@@ -167,7 +184,6 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
 
         oriBottom.setTop_left(new com.readboy.bean.old.Point(932,939));
         oriBottom.setRight_bottom(new com.readboy.bean.old.Point(1052,950));
-
     }
 
     private List<PaperQuestion> getPaperQuestionData(){
@@ -471,7 +487,10 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                 RectangleInfo info = new RectangleInfo();
                 List<Point> points = new ArrayList<>();
                 info.setBitmap(bitmap);
-                String result = getOcrResult(frameData,bitmap);
+                String result = getYouDaoOcrResult(frameData,bitmap);
+                if(TextUtils.isEmpty(result)){
+                    return;
+                }
                 LogUtils.d("result == " + result);
                 //获取标记点的坐标（R 四年级数学上册）
                 Location recordLocationBottom = findRecordLocationBottom(result);
@@ -587,6 +606,62 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
             String imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
             String bodyParam = "image=" + imageBase64;
             result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam,1);
+            LogUtils.d("result == " + result);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private String getYouDaoOcrResult(Mat frameData,Bitmap bitmap){
+
+        Map<String, String> header = null;
+        String result = "";
+        try {
+            header = NetUtil.constructHeader("en", "true");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] imageByteArray = baos.toByteArray();
+            String imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
+            ImageOCRecognizer.getInstance(tps).recognize(imageBase64,
+                    new OCRListener() {
+
+                        @Override
+                        public void onResult(OCRResult result,
+                                             String input) {
+                            //识别成功
+                            if(null != result && result.getRegions().size() > 0){
+                                for (Region region : result.getRegions()) {
+                                    if(null == region){
+                                        continue;
+                                    }
+                                    for (com.youdao.ocr.online.Line line : region.getLines()) {
+                                        if(line == null){
+                                            continue;
+                                        }
+                                        LogUtils.d("getYouDaoOcrResult success text = " + line.getText() + ",location lt= " + line.getBoundingBox().getLeftTop().toString() + ", br = " + line.getBoundingBox().getRightBottom().toString() );
+
+                                        for (com.youdao.ocr.online.Word word : line.getWords()) {
+                                            if(word == null){
+                                                continue;
+                                            }
+                                            //LogUtils.d("getYouDaoOcrResult success text = " + word.getText() + ",location = " + word.getBoundingBox().toString() );
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onError(OcrErrorCode error) {
+                            //识别失败
+                            LogUtils.d("getYouDaoOcrResult fail error= " + error.getCode() + ", error =" + error.toString());
+
+                        }
+                    });
+            /*String bodyParam = "image=" + imageBase64;
+            result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam,1);*/
             LogUtils.d("result == " + result);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();

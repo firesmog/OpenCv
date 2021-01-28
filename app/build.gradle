@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        debug {
+            storeFile file('D:\\apk\\readboy.jks')
+            storePassword '123456'
+            keyAlias 'dream.jks'
+            keyPassword '123456'
+        }
+    }
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
 
@@ -65,4 +73,8 @@ dependencies {
     implementation "androidx.exifinterface:exifinterface:1.2.0"
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation  'pl.droidsonroids.gif:android-gif-drawable:1.2.7'
+    compile files('libs/YoudaoBase_v2.0.4.jar')
+    compile files('libs/YoudaoOCROnline_v2.0.0.jar')
+
+
 }

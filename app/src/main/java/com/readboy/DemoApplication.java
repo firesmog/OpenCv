@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 
 import com.readboy.log.LogConfig;
+import com.youdao.sdk.app.YouDaoApplication;
 
 import java.util.Objects;
 
@@ -18,6 +19,7 @@ public class DemoApplication  extends Application {
         super.onCreate();
         mContext = getApplicationContext();
         initLog();
+        YouDaoApplication.init(this, "3bda187446ebdfcd");
     }
 
     public static Context getInstance() {
