@@ -68,6 +68,9 @@ import com.youdao.ocr.online.OcrErrorCode;
 import com.youdao.ocr.online.Region;
 
 import org.apache.commons.codec.binary.Base64;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
@@ -167,6 +170,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         examData = getPaperExamData();
         initView();
         setAutoFocusListener();
+        EventBus.getDefault().register(this);
 
     }
 
@@ -182,8 +186,8 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         oriTop.setTop_left(new com.readboy.bean.old.Point(1343,146));
         oriTop.setRight_bottom(new com.readboy.bean.old.Point(1503,162));
 
-        oriBottom.setTop_left(new com.readboy.bean.old.Point(932,939));
-        oriBottom.setRight_bottom(new com.readboy.bean.old.Point(1052,950));
+        oriBottom.setTop_left(new com.readboy.bean.old.Point(953,936));
+        oriBottom.setRight_bottom(new com.readboy.bean.old.Point(1053,951));
     }
 
     private List<PaperQuestion> getPaperQuestionData(){
@@ -237,6 +241,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         AnimatorUtil.endUpAndDownAnimator();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -478,79 +483,9 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
 
 
     private  void getRootRecordLocation(final Mat frameData){
-        Observable.create(new ObservableOnSubscribe<RectangleInfo>() {
-            // 1. 创建被观察者 & 生产事件
-            @Override
-            public void subscribe(ObservableEmitter<RectangleInfo> emitter) {
-                Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(frameData, bitmap);
-                RectangleInfo info = new RectangleInfo();
-                List<Point> points = new ArrayList<>();
-                info.setBitmap(bitmap);
-                String result = getYouDaoOcrResult(frameData,bitmap);
-                if(TextUtils.isEmpty(result)){
-                    return;
-                }
-                LogUtils.d("result == " + result);
-                //获取标记点的坐标（R 四年级数学上册）
-                Location recordLocationBottom = findRecordLocationBottom(result);
-                Location recordLocationTop = findRecordLocationTop(result);
-                if(null == recordLocationBottom || null == recordLocationTop){
-                    //todo 提示重拍
-                    LogUtils.d("result == null == recordLocation" + result);
-                    return;
-                }
-                //根据标记点源坐标与识别的标记点坐标，计算出教辅资料的原点。
-                com.readboy.bean.old.Point photoPointBottomStart = getExamPhotoStartPoint(recordLocationTop,recordLocationBottom);
-                com.readboy.bean.old.Point photoPointBottomEnd = getExamPhotoEndPoint(recordLocationTop,recordLocationBottom);
-
-                points.add(DeviceUtil.transformPointFromOld(photoPointBottomStart));
-                points.add(DeviceUtil.transformPointFromOld(photoPointBottomEnd));
-                points.add(DeviceUtil.transformPointFromOld(recordLocationTop.getTop_left()));
-                points.add(DeviceUtil.transformPointFromOld(recordLocationTop.getRight_bottom()));
-                points.add(DeviceUtil.transformPointFromOld(recordLocationBottom.getTop_left()));
-                points.add(DeviceUtil.transformPointFromOld(recordLocationBottom.getRight_bottom()));
-                info.setPoints(points);
-                info.setBitmap(drawRectangles(info.getBitmap(),info.getPoints()));
-                emitter.onNext(info);
-                emitter.onComplete();
-            }
-        })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<RectangleInfo>() {
-
-                    @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(final RectangleInfo info) {
-                        LogUtils.d("getRootRecordLocation == " + info.getPoints().size());
-                        llShow.setVisibility(View.VISIBLE);
-                        mOpenCvCameraView.setVisibility(View.GONE);
-                        llShow.setBackground(new BitmapDrawable(getResources(),info.getBitmap()));
-
-
-
-
-
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        LogUtils.d("getRootRecordLocation error == " + e.getMessage());
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        LogUtils.d("savePictureAccordExam onComplete ");
-
-                    }
-                });
+        Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(frameData, bitmap);
+        getYouDaoOcrResult(frameData,bitmap);
     }
 
     private Bitmap drawRectangles(Bitmap imageBitmap,
@@ -613,8 +548,7 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         return result;
     }
 
-    private String getYouDaoOcrResult(Mat frameData,Bitmap bitmap){
-
+    private String getYouDaoOcrResult(Mat frameData,final Bitmap bitmap){
         Map<String, String> header = null;
         String result = "";
         try {
@@ -630,27 +564,30 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
                         public void onResult(OCRResult result,
                                              String input) {
                             //识别成功
-                            if(null != result && result.getRegions().size() > 0){
-                                for (Region region : result.getRegions()) {
-                                    if(null == region){
-                                        continue;
-                                    }
-                                    for (com.youdao.ocr.online.Line line : region.getLines()) {
-                                        if(line == null){
-                                            continue;
-                                        }
-                                        LogUtils.d("getYouDaoOcrResult success text = " + line.getText() + ",location lt= " + line.getBoundingBox().getLeftTop().toString() + ", br = " + line.getBoundingBox().getRightBottom().toString() );
-
-                                        for (com.youdao.ocr.online.Word word : line.getWords()) {
-                                            if(word == null){
-                                                continue;
-                                            }
-                                            //LogUtils.d("getYouDaoOcrResult success text = " + word.getText() + ",location = " + word.getBoundingBox().toString() );
-                                        }
-                                    }
-
-                                }
+                            RectangleInfo info = new RectangleInfo();
+                            List<Point> points = new ArrayList<>();
+                            info.setBitmap(bitmap);
+                            Location recordLocationBottom = findRecordLocationBottom(result);
+                            Location recordLocationTop = findRecordLocationTop(result);
+                            if(null == recordLocationBottom || null == recordLocationTop){
+                                //todo 提示重拍
+                                LogUtils.d("result == null == recordLocation" + result);
+                                return;
                             }
+                            //根据标记点源坐标与识别的标记点坐标，计算出教辅资料的原点。
+                            com.readboy.bean.old.Point photoPointBottomStart = getExamPhotoStartPoint(recordLocationTop,recordLocationBottom);
+                            com.readboy.bean.old.Point photoPointBottomEnd = getExamPhotoEndPoint(recordLocationTop,recordLocationBottom);
+
+                            points.add(DeviceUtil.transformPointFromOld(photoPointBottomStart));
+                            points.add(DeviceUtil.transformPointFromOld(photoPointBottomEnd));
+                            points.add(DeviceUtil.transformPointFromOld(recordLocationTop.getTop_left()));
+                            points.add(DeviceUtil.transformPointFromOld(recordLocationTop.getRight_bottom()));
+                            points.add(DeviceUtil.transformPointFromOld(recordLocationBottom.getTop_left()));
+                            points.add(DeviceUtil.transformPointFromOld(recordLocationBottom.getRight_bottom()));
+                            info.setPoints(points);
+                            info.setBitmap(drawRectangles(info.getBitmap(),info.getPoints()));
+                            EventBus.getDefault().post(info);
+
                         }
 
                         @Override
@@ -660,8 +597,6 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
 
                         }
                     });
-            /*String bodyParam = "image=" + imageBase64;
-            result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam,1);*/
             LogUtils.d("result == " + result);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -669,74 +604,152 @@ public class TakePhotoActivity extends BaseActivity  implements CameraBridgeView
         return result;
     }
 
-    private Location findRecordLocationBottom(String result){
-        if (!TextUtils.isEmpty(result)) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetMessage(RectangleInfo info) {
+        LogUtils.d("getRootRecordLocation == " + info.getPoints().size());
+        llShow.setVisibility(View.VISIBLE);
+        mOpenCvCameraView.setVisibility(View.GONE);
+        llShow.setBackground(new BitmapDrawable(getResources(),info.getBitmap()));
+    }
+
+    private Location findRecordLocationBottom(OCRResult result){
+        if(null != result && result.getRegions().size() > 0){
             Location location = new Location();
-            BaseResponse baseResponse = GsonUtil.gsonToBean(result, BaseResponse.class);
-            for (Block block : baseResponse.getData().getBlock()) {
-                if(null != block){
-                    for (Line line : block.getLine()) {
-                        if(null == line){
+            com.readboy.bean.old.Point ltPoint = new com.readboy.bean.old.Point();
+            com.readboy.bean.old.Point brPoint = new com.readboy.bean.old.Point();
+            for (Region region : result.getRegions()) {
+                if(null == region){
+                    continue;
+                }
+                for (com.youdao.ocr.online.Line line : region.getLines()) {
+                    if(line == null){
+                        continue;
+                    }
+                    String content = line.getText();
+
+
+                    if(TextUtils.isEmpty(content) || !content.contains("四年级数学上册")){
+                        continue;
+                    }
+                    for (com.youdao.ocr.online.Word word : line.getWords()) {
+                        if(word == null || TextUtils.isEmpty(word.getText())){
                             continue;
                         }
-                        LogUtils.d("line result == bottom =" + line.toString());
-                        for (Word word : line.getWord()) {
-                            if(null == word || TextUtils.isEmpty(word.getContent()) ||  !word.getContent().contains("四年级数学上册")){
-                                continue;
-                            }
-                            location.setRight_bottom(line.getLocation().getRight_bottom());
-                            location.setTop_left(line.getLocation().getTop_left());
-                            return location;
+
+                        if(word.getText().equals("四")){
+                            ltPoint = new com.readboy.bean.old.Point(word.getBoundingBox().getLeftTop().x,word.getBoundingBox().getLeftTop().y);
+                        }
+
+                        if(word.getText().equals("册")){
+                            brPoint = new com.readboy.bean.old.Point(word.getBoundingBox().getRightBottom().x,word.getBoundingBox().getRightBottom().y);
                         }
                     }
+
+                    LogUtils.d("getYouDaoOcrResult success text = " + ltPoint.getX() + ",location lt= " + line.getBoundingBox().getLeftTop().toString() + ", br = " + line.getBoundingBox().getRightBottom().toString() );
+                    location.setRight_bottom(brPoint);
+                    location.setTop_left(ltPoint);
+                    return location;
+
                 }
+
             }
         }
+
         return null;
     }
 
-    private Location findRecordLocationTop(String result){
-        if (!TextUtils.isEmpty(result)) {
+    private Location findRecordLocationTop(OCRResult result){
+        if(null != result && result.getRegions().size() > 0){
             Location location = new Location();
-            BaseResponse baseResponse = GsonUtil.gsonToBean(result, BaseResponse.class);
-            for (Block block : baseResponse.getData().getBlock()) {
-                if(null != block){
-                    for (Line line : block.getLine()) {
-                        if(null == line){
+            com.readboy.bean.old.Point ltPoint = new com.readboy.bean.old.Point();
+            com.readboy.bean.old.Point brPoint = new com.readboy.bean.old.Point();
+            for (Region region : result.getRegions()) {
+                if(null == region){
+                    continue;
+                }
+                for (com.youdao.ocr.online.Line line : region.getLines()) {
+                    if(line == null){
+                        continue;
+                    }
+                     for (com.youdao.ocr.online.Word word : line.getWords()) {
+                        if(word == null){
                             continue;
                         }
-                        LogUtils.d("line result == top = " + line.toString());
-                        for (Word word : line.getWord()) {
-                            if(null == word || TextUtils.isEmpty(word.getContent()) ||  !word.getContent().contains("四、三位数乘两位数")){
-                                continue;
-                            }
-                            location.setRight_bottom(line.getLocation().getRight_bottom());
-                            location.setTop_left(line.getLocation().getTop_left());
-                            return location;
+                        //LogUtils.d("getYouDaoOcrResult success text = " + word.getText() + ",location = " + word.getBoundingBox().toString() );
+                    }
+                    String content = line.getText();
+
+                   if(TextUtils.isEmpty(content) || !content.contains("四、三位数乘两位数")){
+                        continue;
+                    }
+
+                    for (com.youdao.ocr.online.Word word : line.getWords()) {
+                        if(word == null || TextUtils.isEmpty(word.getText())){
+                            continue;
+                        }
+
+                        if(word.getText().equals("四")){
+                            ltPoint = new com.readboy.bean.old.Point(word.getBoundingBox().getLeftTop().x,word.getBoundingBox().getLeftTop().y);
+                        }
+
+                        if(word.getText().equals("数")){
+                            brPoint = new com.readboy.bean.old.Point(word.getBoundingBox().getRightBottom().x,word.getBoundingBox().getRightBottom().y);
                         }
                     }
+                    LogUtils.d("getYouDaoOcrResult success text = " + line.getText() + ",location lt= " + line.getBoundingBox().getLeftTop().toString() + ", br = " + line.getBoundingBox().getRightBottom().toString() );
+                    location.setRight_bottom(brPoint);
+                    location.setTop_left(ltPoint);
+                    return location;
                 }
             }
         }
+
         return null;
     }
 
     private com.readboy.bean.old.Point getExamPhotoStartPoint(Location locationTop,Location locationBottom){
-        int gapTopTopY = Math.abs(oriTop.getTop_left().getY() - oriBottom.getRight_bottom().getY());
+        /*int gapTopTopY = Math.abs(oriTop.getTop_left().getY() - oriBottom.getRight_bottom().getY());
         int gapMeasure = Math.abs(locationTop.getTop_left().getY() - locationBottom.getRight_bottom().getY());
         float ratio = (float)gapMeasure/(float)gapTopTopY;
         int startLtY = (int)Math.abs(ratio*(oriTop.getTop_left().getY() - oriLocation.getTop_left().getY())) + locationTop.getTop_left().getY();
         int startLtX = locationTop.getTop_left().getX() - (int)Math.abs(ratio*(oriTop.getTop_left().getX() - oriLocation.getTop_left().getX())) ;
+        return new com.readboy.bean.old.Point(startLtX,startLtY);*/
+
+        float gapTopTopY = Math.abs((oriTop.getTop_left().getY() + oriTop.getRight_bottom().getY() - oriBottom.getTop_left().getY() -  oriBottom.getRight_bottom().getY())/2.0f);
+        float gapTargetY = Math.abs((oriLocation.getTop_left().getY() + oriLocation.getRight_bottom().getY() - oriTop.getTop_left().getY()- oriTop.getRight_bottom().getY())/2.0f);
+        float ratio = gapTargetY/gapTopTopY;
+        int startLtY = (int)Math.abs(ratio*((locationTop.getTop_left().getY() + locationTop.getRight_bottom().getY() - locationBottom.getTop_left().getY() - locationBottom.getRight_bottom().getY()))/2.0f) + locationTop.getTop_left().getY();
+
+        float gapTopTopX = Math.abs((oriTop.getTop_left().getX() + oriTop.getRight_bottom().getX() - oriBottom.getTop_left().getX() -  oriBottom.getRight_bottom().getX())/2.0f);
+        float gapTargetX = Math.abs((oriLocation.getTop_left().getX()  - oriTop.getTop_left().getX())/1.0f);
+        float ratioX = gapTargetX/gapTopTopX;
+        int startLtX = locationTop.getTop_left().getX() - (int)Math.abs(ratioX*((locationTop.getTop_left().getX() + locationTop.getRight_bottom().getX()
+                -locationBottom.getRight_bottom().getX() - locationBottom.getTop_left().getX()))/2.0f);
         return new com.readboy.bean.old.Point(startLtX,startLtY);
     }
 
     private com.readboy.bean.old.Point getExamPhotoEndPoint(Location locationTop,Location locationBottom){
-        int gapTopTopY = Math.abs(oriTop.getTop_left().getY() - oriBottom.getRight_bottom().getY());
+        float gapTopTopY = Math.abs((oriTop.getTop_left().getY() + oriTop.getRight_bottom().getY() - oriBottom.getTop_left().getY() -  oriBottom.getRight_bottom().getY())/2.0f);
+        float gapTargetY = Math.abs((oriLocation.getTop_left().getY() + oriLocation.getRight_bottom().getY() - oriTop.getTop_left().getY()- oriTop.getRight_bottom().getY())/2.0f);
+        float ratio = (float)gapTargetY/(float)gapTopTopY;
+        int endY = (int)Math.abs(ratio*((locationTop.getTop_left().getY() + locationTop.getRight_bottom().getY() - locationBottom.getTop_left().getY() - locationBottom.getRight_bottom().getY()))/2.0f) + locationTop.getRight_bottom().getY();
+
+
+
+        float gapTopTopX = Math.abs((oriTop.getTop_left().getX() + oriTop.getRight_bottom().getX() - oriBottom.getTop_left().getX() -  oriBottom.getRight_bottom().getX())/2.0f);
+        float gapTargetX = Math.abs((oriLocation.getRight_bottom().getX()  - oriTop.getRight_bottom().getX())/1.0f);
+        float ratioX = gapTargetX/gapTopTopX;
+        int endX = locationTop.getRight_bottom().getX() - (int)Math.abs(ratioX*((locationTop.getRight_bottom().getX() + locationTop.getTop_left().getX()
+                -locationBottom.getRight_bottom().getX() - locationBottom.getTop_left().getX()))/2.0f) ;
+        return new com.readboy.bean.old.Point(endX,endY);
+
+
+        /*int gapTopTopY = Math.abs(oriTop.getTop_left().getY() - oriBottom.getRight_bottom().getY());
         int gapMeasure = Math.abs(locationTop.getTop_left().getY() - locationBottom.getRight_bottom().getY());
         float ratio = (float)gapMeasure/(float)gapTopTopY;
         int endY = (int)Math.abs(ratio*(oriTop.getRight_bottom().getY() - oriLocation.getRight_bottom().getY())) + locationTop.getRight_bottom().getY();
         int endX = locationTop.getRight_bottom().getX() - (int)Math.abs(ratio*(oriTop.getRight_bottom().getX() - oriLocation.getRight_bottom().getX())) ;
-        return new com.readboy.bean.old.Point(endX,endY);
+        return new com.readboy.bean.old.Point(endX,endY);*/
     }
 
     @SuppressLint("NewApi")
