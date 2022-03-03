@@ -264,7 +264,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 mRgbaOrigin = inputFrame.rgba();
 //                Imgproc.cvtColor(inputFrame.gray(), mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
                 mRgba = mRgbaOrigin.clone();
-                mRgba = distMap(mRgba.clone(),last_mRgb.clone());
+                //保存当前图像，用于下次计算
+
+                distMap(mRgba.clone(),last_mRgb.clone());
                 last_mRgb = mRgbaOrigin.clone();
 //                Imgproc.cvtColor(mRgba, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
                 break;
@@ -273,7 +275,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 mRgbaOrigin = inputFrame.rgba();
                 mRgba = inputFrame.rgba();
                 mRgba = mRgbaOrigin.clone();
-                mRgba = distMap(mRgba.clone(),last_mRgb.clone());
+                distMap(mRgba.clone(),last_mRgb.clone());
+                //保存当前图像，用于下次计算
                 last_mRgb = mRgbaOrigin.clone();
                 break;
             case VIEW_MODE_CANNY:
@@ -291,56 +294,34 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     }
 
 
-    public Mat distMap(Mat a,Mat b)
+    public void distMap(Mat a,Mat b)
     {
         long curTime = System.currentTimeMillis();
-        int Width = a.cols();
-        int Height = a.rows();
-        int roi_h = 640;
-        int roi_w = 480;
+        int roi_h = 480;
+        int roi_w = 640;
 
         Imgproc.resize(a,a,new Size(roi_w,roi_h));
         Imgproc.resize(b,b,new Size(roi_w,roi_h));
         Mat diff = new Mat(a.rows(),a.cols(),CvType.CV_8UC3);
-
-//        a.convertTo(CvType.CV_32FC1);
-//        b.convertTo(CvType.CV_32FC1);
-//        Mat out = new Mat(a.rows(),a.cols(),CvType.CV_8UC1);
         Core.absdiff(a,b,diff);
         MatOfDouble tmp_m = new MatOfDouble();
         MatOfDouble tmp_sds = new MatOfDouble();
         Core.meanStdDev(diff,tmp_m,tmp_sds);
         Imgproc.GaussianBlur(diff,diff,new Size(3,3),0);
-//        LogUtils.i( "\n---:  " + diff);
-        LogUtils.i( "\n>>>>  :  " + Arrays.toString(tmp_m.get(0, 0)) + "  " + Arrays.toString(tmp_sds.get(0, 0)));
         double stdev = tmp_sds.get(0, 0)[0];
-        Imgproc.resize(diff,diff,new Size(Width,Height));
-
-        Imgproc.putText(diff, format.format(tmp_m.get(0, 0)[0]),new Point(5,120),2,1,new Scalar(255,0,0),1,1);
-        Imgproc.putText(diff, format.format(stdev),new Point(5,80),2,1,new Scalar(255,0,0),1,1);
         if(stdev > sdThresh)
         {
-//            LogUtils.i( "\n---:  " + "检测到运动");
             motion = true;
-            Imgproc.putText(diff, "-- motion",new Point(5,160),2,1,new Scalar(255,200,0),1,1);
         }
         else
         {
             if(motion && stdev < sdThresh2)
             {
-//                LogUtils.i( "\n---:  " + "完成翻页！");
-                Imgproc.putText(diff, "-- turn pages",new Point(5,160),2,1,new Scalar(255,200,0),1,1);
-
+                //此处已完成翻页，触发一次拍照
                 motion = false;
             }
         }
-        if(!motion)
-        {
-            Imgproc.putText(diff, "-- ok",new Point(5,500),2,1,new Scalar(100,200,200),1,1);
-
-        }
         LogUtils.d("该函数计算事件为： " + (System.currentTimeMillis() - curTime));
-        return diff;
     }
 }
 
