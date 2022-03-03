@@ -1,6 +1,6 @@
 package com.readboy.myopencvcamera;
 
-import org.apache.commons.codec.binary.Base64;
+//import org.apache.commons.codec.binary.Base64;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
@@ -10,6 +10,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
@@ -26,6 +27,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -61,6 +63,8 @@ import com.readboy.util.PhotoUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.InvalidMarkException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -70,6 +74,8 @@ import java.util.Random;
 
 import static com.readboy.net.NetUtil.WEBOCR_URL;
 import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
+import static org.opencv.imgproc.Imgproc.initUndistortRectifyMap;
+import org.opencv.core.Core;
 
 @SuppressLint("NewApi")
 
@@ -91,13 +97,17 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private String[] answer = {"Read", "boy", "girl", "child", "home", "Car", "bike", "book", "good","bad","tiger","apple","android","target","parent"
             ,"bus","cow","horse","house","water","fire","smog","at","where","when","how","what","why","ask","which"};
     private List<String> results = new ArrayList<>();
+    DecimalFormat format = new DecimalFormat("#.00");
 
     private int mViewMode;
     private Mat mRgba;
     private Mat mIntermediateMat;
     private Mat mGray;
-
-
+    private Mat last_mRgb;
+    private Mat mRgb;
+    private double sdThresh = 20;
+    private double sdThresh2 = 5;
+    private boolean motion = false;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -220,11 +230,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                 getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
                 //showAutoCropPicture(mRgba);
-                savePicture(mRgba);
                 llShow.setVisibility(View.VISIBLE);
                 mOpenCvCameraView.setVisibility(View.GONE);
                 mViewMode = VIEW_MODE_CLICK;
-              break;
+                break;
         }
         return true;
     }
@@ -234,6 +243,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mIntermediateMat = new Mat(height, width, CvType.CV_8UC4);
         mGray = new Mat(height, width, CvType.CV_8UC1);
+        last_mRgb = new Mat(height, width, CvType.CV_8UC4);
     }
 
     public void onCameraViewStopped() {
@@ -243,18 +253,28 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     }
 
+
+
+
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         final int viewMode = mViewMode;
         switch (viewMode) {
             case VIEW_MODE_GRAY:
                 hasSaved = false;
                 mRgbaOrigin = inputFrame.rgba();
-                Imgproc.cvtColor(inputFrame.gray(), mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
+//                Imgproc.cvtColor(inputFrame.gray(), mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
+                mRgba = mRgbaOrigin.clone();
+                mRgba = distMap(mRgba.clone(),last_mRgb.clone());
+                last_mRgb = mRgbaOrigin.clone();
+//                Imgproc.cvtColor(mRgba, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
                 break;
             case VIEW_MODE_RGBA:
-
                 hasSaved = false;
+                mRgbaOrigin = inputFrame.rgba();
                 mRgba = inputFrame.rgba();
+                mRgba = mRgbaOrigin.clone();
+                mRgba = distMap(mRgba.clone(),last_mRgb.clone());
+                last_mRgb = mRgbaOrigin.clone();
                 break;
             case VIEW_MODE_CANNY:
                 hasSaved = false;
@@ -270,360 +290,57 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         return mRgba;
     }
 
-    //todo 参数最好可以设置为动态变化，第一次识别失败后就修改参数
-    private Mat processImage( Mat gray ) {
-        Mat b = new Mat();
 
-        //高斯模糊效果较好，size里的参数只能为奇数
-        Imgproc.GaussianBlur(gray,b, new Size(5,5),0);
-        Mat t = new Mat();
-        Imgproc.threshold(b, t, 125, 300, THRESH_BINARY);
-        return t;
-    }
+    public Mat distMap(Mat a,Mat b)
+    {
+        long curTime = System.currentTimeMillis();
+        int Width = a.cols();
+        int Height = a.rows();
+        int roi_h = 640;
+        int roi_w = 480;
 
+        Imgproc.resize(a,a,new Size(roi_w,roi_h));
+        Imgproc.resize(b,b,new Size(roi_w,roi_h));
+        Mat diff = new Mat(a.rows(),a.cols(),CvType.CV_8UC3);
 
-    public List<Point> getCornersByContour(Mat imgsource){
-        List<MatOfPoint> contours=new ArrayList<>();
-        //轮廓检测
-        Imgproc.findContours(imgsource,contours,new Mat(),Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE);
-        Log.d(TAG,"findContours size = " + contours.size());
-        double maxArea= 20;
-        int maxAreaIdx=-1;
-        MatOfPoint temp_contour=contours.get(0);//假设最大的轮廓在index=0处
-        MatOfPoint2f approxCurve=new MatOfPoint2f();
-        for (int idx=0;idx<contours.size();idx++){
-            temp_contour=contours.get(idx);
-            double contourarea=Imgproc.contourArea(temp_contour);
-            Log.d(TAG,"findContours area = " + contourarea);
+//        a.convertTo(CvType.CV_32FC1);
+//        b.convertTo(CvType.CV_32FC1);
+//        Mat out = new Mat(a.rows(),a.cols(),CvType.CV_8UC1);
+        Core.absdiff(a,b,diff);
+        MatOfDouble tmp_m = new MatOfDouble();
+        MatOfDouble tmp_sds = new MatOfDouble();
+        Core.meanStdDev(diff,tmp_m,tmp_sds);
+        Imgproc.GaussianBlur(diff,diff,new Size(3,3),0);
+//        LogUtils.i( "\n---:  " + diff);
+        LogUtils.i( "\n>>>>  :  " + Arrays.toString(tmp_m.get(0, 0)) + "  " + Arrays.toString(tmp_sds.get(0, 0)));
+        double stdev = tmp_sds.get(0, 0)[0];
+        Imgproc.resize(diff,diff,new Size(Width,Height));
 
-            //当前轮廓面积比最大的区域面积大就检测是否为四边形
-            if (contourarea > maxArea){
-                //检测contour是否是四边形
-                MatOfPoint2f new_mat=new MatOfPoint2f(temp_contour.toArray());
-                int contourSize= (int) temp_contour.total();
-                MatOfPoint2f approxCurve_temp=new MatOfPoint2f();
-                //对图像轮廓点进行多边形拟合
-                Imgproc.approxPolyDP(new_mat,approxCurve_temp,contourSize*0.07,true);
-                if (approxCurve_temp.total()==4){
-                    maxArea=contourarea;
-                    maxAreaIdx=idx;
-                    approxCurve=approxCurve_temp;
-                    Log.d(TAG,"findContours22222 area = " + contourarea);
-                }
+        Imgproc.putText(diff, format.format(tmp_m.get(0, 0)[0]),new Point(5,120),2,1,new Scalar(255,0,0),1,1);
+        Imgproc.putText(diff, format.format(stdev),new Point(5,80),2,1,new Scalar(255,0,0),1,1);
+        if(stdev > sdThresh)
+        {
+//            LogUtils.i( "\n---:  " + "检测到运动");
+            motion = true;
+            Imgproc.putText(diff, "-- motion",new Point(5,160),2,1,new Scalar(255,200,0),1,1);
+        }
+        else
+        {
+            if(motion && stdev < sdThresh2)
+            {
+//                LogUtils.i( "\n---:  " + "完成翻页！");
+                Imgproc.putText(diff, "-- turn pages",new Point(5,160),2,1,new Scalar(255,200,0),1,1);
+
+                motion = false;
             }
         }
-        Log.d(TAG,"findContours area max  = " + maxArea);
-        return BitmapUtils.getImagePoint(approxCurve);
-    }
+        if(!motion)
+        {
+            Imgproc.putText(diff, "-- ok",new Point(5,500),2,1,new Scalar(100,200,200),1,1);
 
-
-    //将二值化后抓取的边框轮廓图片用不同颜色显示出来
-    private void showDifferentColorImage(Mat frame){
-        Mat frameData = processImage(frame);
-        Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(frameData, bitmap);
-        String name = System.currentTimeMillis() + "output_image.jpg";
-        String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
-        String fileName = pathResult + ".jpg";
-        Imgcodecs.imwrite(fileName, frameData);
-        //ivShow.setImageBitmap(bitmap);
-        Mat edge=new Mat();
-        Mat contours=new Mat();
-        Imgproc.Canny(frameData,edge,90,270,5,true);
-        List<MatOfPoint> contourList=new ArrayList<>();
-        contours.create(edge.rows(), edge.cols(), CvType.CV_8UC3);
-        Imgproc.findContours(edge,contourList,new Mat(),Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE);
-        for (int i = 0; i < contourList.size() ; i++) {
-            double curArea = Imgproc.contourArea(contourList.get(i));
-            if(  curArea < 3000){
-                continue;
-            }
-
-            if(Math.abs(curArea - lastArea)  < 10){
-                continue;
-            }
-            lastArea = curArea;
-
-            //
-            MatOfPoint2f curve = new MatOfPoint2f(contourList.get(i).toArray());
-            approxCurve = new MatOfPoint2f();
-            double epsilon = 15;
-            Imgproc.approxPolyDP(curve, approxCurve, epsilon,true );
-
-            if(approxCurve.total() != 4){
-                continue;
-            }
-
-            Log.d(TAG,"findContours area max  = " + Imgproc.contourArea(contourList.get(i))  +  ",length = " + Imgproc.arcLength(approxCurve,true));
-
-
-            List<Point> points = BitmapUtils.getImagePoint(approxCurve);
-            Bitmap stretch = BitmapUtils.cropBitmap(points,bitmap);
-            BitmapUtils.saveImageToGallery(stretch,MainActivity.this,i);
-            Random r = new Random();
-            Imgproc.drawContours(
-                    contours,
-                    contourList,
-                    i,
-                    new Scalar(r.nextInt(255), r.nextInt(255), r.nextInt(255)),
-                    -1
-            );
         }
-        Utils.matToBitmap(contours, bitmap);
-        llShow.setBackground(new BitmapDrawable(getResources(), bitmap));
-    }
-
-    //自动按边框裁剪后拉伸（test pass）
-    private void showAutoCropPicture(Mat frame){
-        Mat frameData = processImage(frame);
-        Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(frameData, bitmap);
-        Mat edge=new Mat();
-        Imgproc.Canny(frameData,edge,90,270,5,true);
-        Utils.matToBitmap(frame, bitmap);
-        List<Point> points = getCornersByContour(edge);
-        for (Point point : points) {
-            Log.d(TAG,"point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
-        }
-
-        Bitmap stretch = BitmapUtils.cropBitmap(points,bitmap);
-        llShow.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-        llShow.setBackground(new BitmapDrawable(getResources(), stretch));
-        double ratioHeight  = llHeight*1.0d / 800;
-        double ratioWidth = llWidth *1.0d/ 600;
-        LogUtils.d("ratioHeight = " + ratioHeight + " , ratioWidth = " + ratioWidth );
-        addView(ratioWidth,ratioHeight);
-
-    }
-
-
-
-
-    @SuppressLint("NewApi")
-    private void savePicture(Mat frame){
-        Mat frameData = processImage(frame);
-        List<Mat> mats = new ArrayList<>();
-        //多通道分离出单通道
-        Bitmap bitmap = Bitmap.createBitmap(frameData.width(), frameData.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(frameData, bitmap);
-        String name = System.currentTimeMillis() + "output_image.jpg";
-        String pathResult = getExternalFilesDir("Pictures").getPath() + "/" + name;
-        String fileName = pathResult + ".jpg";
-        Imgcodecs.imwrite(fileName, frameData);
-        //ivShow.setImageBitmap(bitmap);
-        Mat edge=new Mat();
-        Imgproc.Canny(frameData,edge,90,270,5,true);
-        List<Point> points = getCornersByContour(edge);
-        for (Point point : points) {
-            Log.d(TAG,"point ======" + point.toString() + ",width = " +edge.width() + ",height = " + edge.height());
-        }
-        Point leftTop = points.get(0);
-        Point righttop=points.get(1);
-        Point leftbottom=points.get(2);
-        Point rightbottom=points.get(3);
-        Utils.matToBitmap(mRgbaOrigin, bitmap);
-
-
-        //add by lzy for class exam demo
-        //试卷宽高分别为600 和 720 px ,需要先计算拍照得宽高和真实试卷宽高得比例才好定位
-        //这里要考虑到展示到设备上得时候，图片可能已经拉伸或压缩了，所以不推荐使用图片比例计算
-        double leftHeight = leftbottom.y - leftTop.y;
-        double rightHeight = rightbottom.y - righttop.y;
-        double topWidth =  righttop.x - leftTop.x;
-        double bottomWidth = rightbottom.x - leftbottom.x;
-
-        double height = Math.min(leftHeight, rightHeight);
-        double height2 = Math.max(leftHeight, rightHeight);
-        double width = Math.min(bottomWidth, topWidth);
-        double width2 = Math.max(bottomWidth, topWidth);
-
-        int examHeight = 933;
-        int examWidth = 662;
-        double gapWidth = width2 - width;
-        double ratioHeight  = height /examHeight ;
-        double ratioWidth = width / examWidth;
-
-        LogUtils.d("ratioWidth = " + ratioWidth + " , ratioHeight = " + ratioHeight   );
-        LogUtils.d("leftHeight = " + leftHeight + " , rightHeight = " + rightHeight  +  ",topWidth = " + topWidth + ",bottomWidth = " + bottomWidth  );
-        LogUtils.d("ratioWidth = " +  width  + " , ratioHeight00 = " + height  + ",maxWidth =" + width2 + ",maxHeight = " + height2  + ",gapWidth = " + gapWidth);
-
-
-
-        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_d),Data.class);
-        Block[] blocks = data.getBlock();
-
-        //修改各个答案显示在照片里的坐标值
-        for(int j = 0 ; j< blocks.length ; j++ ){
-            // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
-            Block block = blocks[j];
-            Location location = block.getLine().getLocation();
-            LogUtils.d("Location == = " + location.toString() + " ,j =  = " + j + ",leftTop. x = " + leftTop. x  + ",leftTop. y = " + leftTop. y);
-
-            List<Point> pointScrop = new ArrayList<>();
-            int marginMore = 8;
-            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX() *ratioWidth )-1.5* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight)- 2.7*marginMore ));
-            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth )  + 1.5* marginMore ,(leftTop.y + location.getTop_left().getY()*ratioHeight) - 2.7*marginMore));
-            pointScrop.add(new Point((leftTop. x  + location.getTop_left().getX()*ratioWidth)  - 1.5*marginMore,(leftTop.y + location.getRight_bottom().getY()*ratioHeight)  + marginMore ));
-            pointScrop.add(new Point((leftTop. x  + location.getRight_bottom().getX()*ratioWidth ) + 1.5* marginMore ,(leftTop.y + location.getRight_bottom().getY()*ratioHeight   + marginMore )));
-            Bitmap stretch = BitmapUtils.cropBitmap(pointScrop,bitmap);
-            String root = getExternalCacheDir().getAbsolutePath();
-            String dirName = "erweima16";
-            File appDir = new File(root , dirName);
-            if (!appDir.exists()) {
-                appDir.mkdirs();
-            }
-
-            //文件名为时间
-            String path = "Image" + j + ".jpg";
-            BitmapUtils.saveImageToGallery(stretch,MainActivity.this,j);
-
-            location.setTop_left(new com.readboy.bean.Point((int)(leftTop.x + location.getTop_left().getX()*ratioWidth),(int)(leftTop.y + location.getTop_left().getY()*ratioHeight)));
-            location.setRight_bottom(new com.readboy.bean.Point((int)(leftTop.x + location.getRight_bottom().getX()*ratioWidth),(int)(leftTop.y + location.getRight_bottom().getY()*ratioHeight)));
-            LogUtils.d("Location111 == = " + (leftTop. x + location.getTop_left().getX()*ratioWidth) + " ,j =  = " + j + ",leftTop. y = " + (leftTop.y + location.getTop_left().getY()*ratioHeight) );
-            LogUtils.d("Location222 == = " + (leftTop. x + location.getRight_bottom().getX()*ratioWidth ) + " ,j =  = " + j + ",leftTop. y = " + (leftTop.y + location.getRight_bottom().getY()*ratioHeight) );
-        }
-        llShow.setBackground(new BitmapDrawable(getResources(),bitmap));
-        doNetRequest(bitmap);
-
-        LogUtils.d("ratioWidth1111 = " + llWidth/width + " , ratioHeight1111 = " + llHeight/height + ",block size = " + blocks.length );
-
-        //addView(llWidth/600,llHeight/800);
-        addViewForWholeTest(1.0d*llWidth/bitmap.getWidth(),1.0d*llHeight/bitmap.getHeight(),blocks);
-       // addViewForWholeTest(llWidth/600,llHeight/800,blocks);
-
-    }
-
-
-    public void addViewForWholeTest(double ratioWidth , double ratioHeight,Block[] blocks) {
-        for(int j = 0 ; j< blocks.length ; j++ ){
-            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
-            Block block = blocks[j];
-            Location location = block.getLine().getLocation();
-            //获取中位点
-            // 30 是textSize的1.5倍换算过来的
-            double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/3 + location.getTop_left().getX();
-            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY() - 20;
-            TextView child = new TextView(this);
-            child.setTextSize(20);
-            String result = "占位符" + (j + 1);
-            child.setText(result);
-            LogUtils.d("midX  = " + midX  + ",midY === " + midY + ",location" + location.toString());
-
-
-            if(j % 2 == 0){
-                child.setTextColor(getResources().getColor(R.color.green));
-
-            }else {
-                child.setTextColor(getResources().getColor(R.color.red));
-            }
-            child.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-            params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight) ,0,0);
-            child.setLayoutParams(params);
-            // 调用一个参数的addView方法
-            llShow.addView(child,params);
-        }
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    }
-
-    public void addView(double ratioWidth , double ratioHeight) {
-        Data data = GsonUtil.gsonToBean(getString(R.string.json_string_c),Data.class);
-        Block[] blocks = data.getBlock();
-        for(int j = 0 ; j< blocks.length ; j++ ){
-            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            // 定义显示组件的布局管理器，为了简单，本次只定义一个TextView组件
-            Block block = blocks[j];
-            Location location = block.getLine().getLocation();
-            //获取中位点
-            double midX = 1.0d*(location.getRight_bottom().getX() - location.getTop_left().getX())/2 + location.getTop_left().getX();
-            double midY = /*1.0d*(location.getRight_bottom().getY() - location.getTop_left().getY() )/2 +*/ location.getTop_left().getY();
-            TextView child = new TextView(this);
-            child.setTextSize(20);
-            String result = "占位符" + (j + 1);
-            child.setText(result);
-            LogUtils.d("midX  = " + midX  + ",midY === " + midY + ",location" + location.toString());
-
-
-            if(j % 2 == 0){
-                child.setTextColor(getResources().getColor(R.color.green));
-
-            }else {
-                child.setTextColor(getResources().getColor(R.color.red));
-            }
-            params.setMargins((int)(midX*ratioWidth),(int)(midY*ratioHeight) ,0,0);
-            child.setLayoutParams(params);
-            // 调用一个参数的addView方法
-            llShow.addView(child,params);
-        }
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    }
-
-    private void doNetRequest(final Bitmap bitmap) {
-        LogUtils.d("doNetRequest null 111== bitmap");
-
-        if (null == bitmap){
-            LogUtils.d("doNetRequest null == bitmap");
-            return;
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Map<String, String> header = null;
-                try {
-                    header = NetUtil.constructHeader("en", "true");
-
-                    //Bitmap转换成byte[]
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                    byte[] imageByteArray = baos.toByteArray();
-                    //byte[] imageByteArray = FileUtil.read2ByteArray(path,1);
-                    String imageBase64 = new String(Base64.encodeBase64(imageByteArray), "UTF-8");
-                    String bodyParam = "image=" + imageBase64;
-                    LogUtils.d("result == " + bodyParam.length());
-                    final String result = HttpUtil.doPost(WEBOCR_URL, header, bodyParam);
-                    Log.e("TAG", "result == " + result);
-                    dealListen(result);
-
-                } catch (Exception e) {
-                    LogUtils.d("error = " + e);
-                }
-            }
-        }).start();
-
-
-
-    }
-
-    private void dealListen(String result){
-        if (!TextUtils.isEmpty(result)) {
-            BaseResponse baseResponse = GsonUtil.gsonToBean(result, BaseResponse.class);
-            if (baseResponse != null) {
-                Log.e("TAG", "result == " + baseResponse.toString());
-                Line[] lines = baseResponse.getData().getBlock()[0].getLine();
-                if (null != lines && lines.length > 0) {
-                    List<Line> list = Arrays.asList(lines);
-                    List<Line> lineList = new ArrayList(list);
-                    Collections.sort(lineList);
-
-                    for (Line line : lineList) {
-                        LogUtils.d("dealListen line = " + line.toString());
-                        Word[] words = line.getWord();
-                        for (Word word : words) {
-                            if(!PhotoUtil.isContainChinese(word.getContent()) && !PhotoUtil.isContainsNum(word.getContent()) && !PhotoUtil.check(word.getContent())){
-                                results.add(word.getContent());
-                            }
-                        }
-                    }
-                }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //addView();
-
-                    }
-                });
-            }
-        }
+        LogUtils.d("该函数计算事件为： " + (System.currentTimeMillis() - curTime));
+        return diff;
     }
 }
 

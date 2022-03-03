@@ -5,10 +5,10 @@
 5    android:versionName="3.4.10" >
 6
 7    <uses-sdk
-7-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:7:5-47
+7-->C:\F\project\android\OpenCv\opencv\src\main\AndroidManifest.xml:7:5-47
 8        android:minSdkVersion="14"
-8-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:7:5-47
+8-->C:\F\project\android\OpenCv\opencv\src\main\AndroidManifest.xml:7:5-47
 9        android:targetSdkVersion="28" />
-9-->D:\git_project\MyOpenCvCamera\opencv\src\main\AndroidManifest.xml:7:15-44
+9-->C:\F\project\android\OpenCv\opencv\src\main\AndroidManifest.xml:7:15-44
 10
 11</manifest>
